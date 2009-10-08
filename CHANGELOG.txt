@@ -1,0 +1,5 @@
+// $Id:
+
+CAS Server 6.x-dev, 2009-10-08
+------------------------------
+Development import of the CAS Server module.
