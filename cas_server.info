@@ -1,0 +1,5 @@
+; $Id$ 
+name = CAS Server
+description = Implement a CAS Server using Drupal as the user base
+package = Other
+core = 6.x

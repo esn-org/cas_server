@@ -1,0 +1,380 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Assists a new user in completing tasks by displaying a checklist when they login
+ */
+
+/*********************
+ * Core Drupal Hooks *
+ *********************/
+
+/**
+ * Implementation of hook_menu()
+ */
+function cas_server_menu() {
+  $items = array();
+  $items['admin/settings/cas_server'] = array(
+    'title' => 'CAS Server',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('cas_server_admin_form'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
+		'file' => 'includes/cas_server.admin.inc',
+  );
+  $items['cas_server/login'] = array(
+    'title' => 'Login',
+    'page callback' => 'cas_server_login_page',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+		'file' => 'includes/cas_server.pages.inc',
+  );
+	$items['cas_server/logout'] = array(
+    'title' => 'CAS Logout',
+    'page callback' => 'cas_server_logout_page',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+		'file' => 'includes/cas_server.pages.inc',
+  );
+  $items['cas_server/validate'] = array(
+    'title' => 'CAS Ticket Validate',
+    'page callback' => 'cas_server_validate_page',
+    'page arguments' => array('1.0'),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+		'file' => 'includes/cas_server.pages.inc',
+  );
+  $items['cas_server/serviceValidate'] = array(
+    'title' => 'CAS Ticket Validate',
+    'page callback' => 'cas_server_validate_page',
+    'page arguments' => array('2.0'),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+		'file' => 'includes/cas_server.pages.inc',
+  );
+  $items['cas_server/proxyValidate'] = array(
+    'title' => 'CAS Ticket Validate',
+    'page callback' => 'cas_server_validate_page',
+    'page arguments' => array('2.0', TRUE),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+		'file' => 'includes/cas_server.pages.inc',
+  );
+  $items['cas_server/proxy'] = array(
+    'title' => 'CAS Ticket Validate',
+    'page callback' => 'cas_server_proxy_page',
+    //'page arguments' => array('2.0'),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+		'file' => 'includes/cas_server.pages.inc',
+  );
+  return $items;
+}
+
+/**
+ * Implementation of hook_exit()
+ */
+function cas_server_exit() {
+	if (variable_get('cache', 0) && (_cas_server_login_form_altered())) {
+		$get = $_GET;
+		unset($get['q']);
+		cache_clear_all(url($_GET['q'], array('query' => $get, 'absolute' => TRUE)), 'cache_page', FALSE);
+	}
+}
+
+/**
+ * Implemenation of hook_form_alter() for user_login form
+ */
+function cas_server_form_user_login_alter(&$form, &$form_state) {
+	global $user;
+	if (variable_get('cas_server_warning_box', FALSE)) {
+		$form['cas_server_warn'] = array(
+			'#type' => 'checkbox',
+			'#title' => t('Warn me when other services log me in'),
+			'#description' => t('You are a logging in to a service which may be used by multiple web sites. By checking this box you are asking to see a special message letting you know whenever another web site asks who you are.'),
+		);
+	}
+	if ($service = urldecode($_GET['service'])) {
+		$form['cas_server_service'] = array(
+			'#type' => 'hidden',
+			'#value' => $service,
+		);
+    drupal_set_message(t('This login request came from @service. By entering your credentials below, you will be authenticated and redirected to this site.', array('@service' => $service)));
+	}
+	
+	//Find the current login ticket
+	if ($_SESSION['cas']['lt'] && $_SESSION['cas']['lt_valid']) {
+		//As soon as we grab it again, it is no longer valid.
+		$_SESSION['cas']['lt_valid'] = FALSE;
+		$_SESSION['cas']['lt_validated'] = $_SESSION['cas']['lt'];
+	}
+	//Create a new login ticket. This is to handle the case when the login fails.
+	//The ticket is stored above as long as it is validated
+	$lt = _cas_server_generate_ticket('LT'); //Login Ticket
+	$_SESSION['cas']['lt'] = $lt;
+	$_SESSION['cas']['lt_valid'] = TRUE;
+
+	$form['cas_server_lt'] = array(
+		'#type' => 'hidden',
+		'#value' => $lt,
+	);
+	$form['#validate'] = array('cas_server_user_login_validate') + $form['#validate'];
+  $form['#submit'][] = 'cas_server_user_login_submit';
+	_cas_server_login_form_altered(TRUE);
+	$form['#cache'] = FALSE;
+}
+
+/**
+ * Form validation for the user_login form
+ */
+function cas_server_user_login_validate($form, &$form_state) {
+	//This should never happen, but we need to check for it.
+	if (!isset($_SESSION['cas']['lt_validated']) || !$_SESSION['cas']['lt_validated'] || !$_POST['cas_server_lt']) {
+		form_set_error('other', '');
+	}
+  //Use _POST here because drupal form handling replaces hidden values with the form value before submission.
+  //We really want to check to make sure the value wasn't tampered with.
+  else if ($_POST['cas_server_lt'] != $_SESSION['cas']['lt_validated']) {
+    //Someone changed the login ticket in the form. This is some form of an attack.
+    watchdog('cas_server', 'LOGIN invalid with non-matching login ticket. The given lt was @given but should have been @current.', array('@given' => $form_state['values']['cas_server_lt'], '@current' => $_SESSION['cas']['lt_validated']), WATCHDOG_WARNING);
+    unset($_SESSION['cas']['lt_validated']);
+    form_set_error('other', '');
+  }
+}
+
+/**
+ * Form submission for the user_login form
+ */
+function cas_server_user_login_submit($form, &$form_state) {
+  if ($_SESSION['cas']['lt_validated']) {
+    $_SESSION['cas']['warn'] = $form_state['values']['cas_server_warn'];
+    
+    //Set the ticket granting cookie if needed
+    if (!($tgc = _cas_server_load_ticket_granting_cookie()) || (!isset($_SESSION['cas']['current_tgc'])) || ($_SESSION['cas']['current_tgc'] != $tgc)) {
+      _cas_server_set_ticket_granting_cookie();
+    }
+    
+    //This call will redirect the user based off the parameters
+    //We don't need to warn the user that they are being logged into a service because
+    //they just logged in and were warned before.
+    if ($form_state['values']['cas_server_service']) cas_server_login_request($form_state['values']['cas_server_service'], FALSE, FALSE, NULL, TRUE);
+  }
+}
+
+
+function cas_server_login_request($service, $warn, $renew, $gateway = NULL, $renewal = FALSE) {
+  global $user;
+  //User needs to login in the following cases:
+  //  - The user is not logged in to Drupal
+  //  - The service requests it by setting $_GET['renew']
+  //  - There is no ticket granting cookie (would occur if the user closed their browser session)
+  //  - The current ticket granting cookie does not match the one of the currently logged in user
+  if (!$gateway && ((!$user->uid) || ($renew) || !($tgc = _cas_server_load_ticket_granting_cookie()) || (!isset($_SESSION['cas'])) || ($_SESSION['cas']['current_tgc'] != $tgc))) {
+    if ($user->uid && $tgc && ($_SESSION['cas']['current_tgc'] != $tgc)) {
+      //This is a security issue. Someone is trying to hack the request
+      watchdog('cas_server', 'LOGIN invalid with bad cookie for user @uid(@name). The given cookie was @given but should have been @current.', array('@uid' => $user->uid, '@name' => $user->name, '@given' => $tgc, '@current' => $_SESSION['cas']['current_tgc']), WATCHDOG_WARNING);
+    }
+    //The user login form looks to see if the user is logged in by checking the uid.
+    //Hack around this by removing the uid when loading the form.
+    $uid = $user->uid;
+    $user->uid = NULL;
+    $output = drupal_get_form('user_login');
+    $user->uid= $uid;
+    return $output;
+  }
+  
+  //Clear all the messages when moving on
+  drupal_get_messages();
+  
+  if (($user->uid) && ($tgc) && ($_SESSION['cas']['current_tgc'] == $tgc)) {
+    if ($service) {
+      if ($ticket = cas_server_new_service_ticket($user->uid, $service, $tgc, $renewal)) {
+        if ($warn) {
+          return t('You are being authenticated for a new service. Click the link to continue: !service', array('!service' => l($service, $service, array('query' => array('ticket' => $ticket->service_ticket), 'absolute' => TRUE))));
+        }
+        else {
+          unset($_REQUEST['destination']); //Make sure the user is redirected to the service
+          drupal_goto($service, array('ticket' => $ticket->service_ticket));
+        }
+      }
+    }
+    //Fall through to the home page redirection
+  }
+  else if ($service && $gateway) {
+    drupal_goto($service, array());
+  }
+  
+  //Go to the home page if the request doesn't meet any of the requirements
+  drupal_goto('');
+}
+
+/**
+ * Function to create a ticket for a new service request that is coming in.
+ * $uid - The uid of the user to create the ticket for. Should be the logged in user.
+ * $service - The url of the $_GET['service'] variable
+ * $tgc - The value of the ticket granting cookie that this request is being made with.
+ * $renewal - Whether or not this is a renewal request
+ */
+function cas_server_new_service_ticket($uid, $service, $tgc, $renewal = FALSE) {
+	$ticket = array('uid' => $uid, 'tgc' => $tgc, 'service_url' => $service, 'service_ticket' => _cas_server_generate_ticket('ST'), 'renewal_ticket' => $renewal, 'expiration_time' => strtotime('+5 minutes'));
+  $ticket = (object)$ticket;
+  if (drupal_write_record('cas_server_service', $ticket)) {
+	  return $ticket;
+	}
+	//This should only occur if the cas_server schema is invalid
+	return FALSE;
+}
+
+/**
+ * Function to create a new proxy ticket
+ * $pgt - A proxy granting ticket as returned from cas_server_load_proxy_granting_ticket()
+ * $service - The service identifier of the back-end service
+ */
+function cas_server_new_proxy_ticket($pgt, $service) {
+	$ticket = array('proxy_granting_ticket_id' => $pgt->proxy_granting_ticket_id, 'target_service' => $service, 'proxy_ticket' => _cas_server_generate_ticket('PT'), 'expiration_time' => strtotime('+5 minutes'));
+  $ticket = (object)$ticket;
+  if (drupal_write_record('cas_server_proxy', $ticket)) {
+	  return $ticket;
+	}
+	return FALSE;
+}
+
+/**
+ * Load the current service ticket.
+ * $service_ticket - The st ticket: ST-......
+ */
+function cas_server_load_service_ticket($service_ticket) {
+  return db_fetch_object(db_query('SELECT css.*, u.uid, u.name, u.mail FROM {cas_server_service} css JOIN {users} u ON css.uid = u.uid WHERE service_ticket = "%s" AND current_valid_ticket = 1', $service_ticket));
+}
+
+/**
+ * Load the current proxy ticket.
+ * $proxy_ticket - The st ticket: PT-......
+ */
+function cas_server_load_proxy_ticket($proxy_ticket) {
+  return db_fetch_object(db_query('SELECT cspr.*, css.service_url, u.uid, u.name, u.mail FROM {cas_server_proxy} cspr JOIN {cas_server_proxy_granting} csp ON cspr.proxy_granting_ticket_id = csp.proxy_granting_ticket_id JOIN {cas_server_service} css ON css.service_ticket_id = csp.service_ticket_id JOIN {users} u ON css.uid = u.uid WHERE cspr.proxy_ticket = "%s" AND current_valid_ticket = 1', $proxy_ticket));
+}
+
+/**
+ * Load the current proxy ticket.
+ * $proxy_granting_ticket - The proxy granting ticket ticket: PGT-......
+ */
+function cas_server_load_proxy_granting_ticket($proxy_granting_ticket) {
+  return db_fetch_object(db_query('SELECT csp.*, css.service_url, u.uid, u.name, u.mail FROM {cas_server_proxy_granting} csp JOIN {cas_server_service} css ON css.service_ticket_id = csp.service_ticket_id JOIN {users} u ON css.uid = u.uid WHERE csp.proxy_ticket = "%s" AND current_valid_ticket = 1', $proxy_granting_ticket));
+}
+
+/**
+ * Load a service ticket for validation and then invalidate the ticket for future reuse
+ *
+ * $service - The url of the service
+ * $service_ticket - The ticket to load and invalidate. Should be a PT-... OR ST-.... ticket
+ * $renew - Whether or not the ticket should be a renewal request ticket
+ * $proxy - Whether or not this is a proxy ticket lookup or not
+ */
+function cas_server_load_ticket_and_invalidate($service, $service_ticket, $renew, $proxy = FALSE) {
+  if ($proxy) {
+    $ticket = cas_server_load_proxy_ticket($service_ticket);
+    //Renewal ticket does not matter on proxy so set this to true to skip the case below
+    $ticket->renewal_ticket = TRUE;
+  }
+  else {
+    $ticket = cas_server_load_service_ticket($service_ticket);
+  }
+  
+  //No ticket found with the given credentials
+  if (!$ticket)  {
+    watchdog('cas_server', 'TICKET request invalid for user @uid. The following credentails were given: service - @service, ticket - @ticket, renewal request - @renew', array('@service' => $service, '@ticket' => $service_ticket, '@renew' => ($renew ? 'true' : 'false')), WATCHDOG_WARNING);
+    return array('code' => 'INVALID_TICKET', 'error' => 'Ticket '. $service_ticket .' not recognized');
+  }
+  
+  //The string used in several places as to whether this is a service or proxy request
+  $type = $proxy ? 'proxy' : 'service';
+  
+  //Every case below requires the ticket to be invalidated
+  _cas_server_ticket_invalidate($ticket, $type);
+  
+  $replacements = array('@ticket_id' => $ticket->{$type .'_ticket_id'}, '@service' => $service, '@ticket' => $service_ticket, '@renew' => ($renew ? 'true' : 'false'));
+  
+  //Not the correct service
+  if ($ticket->service_url != $service)  {
+    watchdog('cas_server', 'TICKET (@ticket_id) request invalid. Service does not match ticket. The following credentails were given: ticket granting cookie - @tgc, service - @service, ticket - @ticket, renewal request - @renew', $replacements, WATCHDOG_WARNING);
+    return array('code' => 'INVALID_SERVICE', 'error' => 'Ticket '. $service_ticket .' does not match the service');
+  }
+  
+  //Not a renewal ticket but it should be
+  if ($renew && !$ticket->renewal_ticket)  {
+    watchdog('cas_server', 'TICKET (@ticket_id) request invalid. Should be renewal ticket, but is not. The following credentails were given: service - @service, ticket - @ticket, renewal request - @renew', $replacements, WATCHDOG_WARNING);
+    return array('code' => 'INVALID_TICKET', 'error' => 'Ticket '. $service_ticket .' is not a renewal ticket');
+  }
+  
+  //Expired ticket
+  if ($ticket->expiration_time < time()) {
+    watchdog('cas_server', 'TICKET (@ticket_id) expired. The following credentails were given: service - @service, ticket - @ticket, renewal request - @renew', $replacements, WATCHDOG_WARNING);
+    return array('code' => 'INVALID_TICKET', 'error' => 'Ticket '. $service_ticket .' is expired');
+  }
+
+  return $ticket;
+}
+
+/**
+ * Callback to invalidate a proxy, service, or proxy_granting ticket
+ * $ticket - The ticket that you want to invalidate
+ * $type - The type of ticket that this is: proxy, service, or proxy_granting
+ */
+function _cas_server_ticket_invalidate($ticket, $type) {
+  $tmp = array($type .'_ticket_id' => $ticket->{$type .'_ticket_id'}, 'current_valid_ticket' => 0);
+  return drupal_write_record('cas_server_'. $type, $tmp, array($type .'_ticket_id'));
+}
+
+/**
+ * Function to generate a random ticket.
+ *
+ * $type - One of 'ST', 'PT', 'TGC', 'PGT', 'PGTIOU'
+ * $length - how long the ticket should be
+ */
+function _cas_server_generate_ticket($type, $length = 32) {
+	return $type .'-'. user_password(($length - strlen($type) - 1));
+}
+
+/**
+ * Internal function to set the ticket granting cookie
+ */
+function _cas_server_set_ticket_granting_cookie() {
+  $_SESSION['cas']['current_tgc'] = _cas_server_generate_ticket('TGC', 64);
+  //According to the documentation, the path of the cookie should be base_path() .'cas_server'
+  //However, this causes issues with the Drupal login block which can be on any page, and the
+  //standard login page found at user/login
+	setcookie(CAS_SERVER_COOKIE_NAME, $_SESSION['cas']['current_tgc'], 0, base_path());
+  _cas_server_load_ticket_granting_cookie($_SESSION['cas']['current_tgc']);
+  return $_SESSION['cas']['current_tgc'];
+}
+
+/**
+ * Internal function to load the ticket granting cookie
+ *
+ * If you would like to set the cookie value for this request, pass it in as the argument.
+ * The reason for allowing this is because a call to setcookie does not become available
+ * until the next page load, but several functions need the cookie on this page load.
+ */
+function _cas_server_load_ticket_granting_cookie($cookie_value = NULL) {
+  static $storing = NULL;
+  if ($cookie_value) $storing = $cookie_value;
+  
+  if ($storing) return $storing;
+	return $_COOKIE[CAS_SERVER_COOKIE_NAME];
+}
+
+/**
+ * Static callback to determine whether or not we altered the login form. Used to
+ * clear the cache if we need to.
+ */
+function _cas_server_login_form_altered($add = FALSE) {
+	static $altered = 0;
+	if ($add) {
+		$altered++;
+	}
+	return $altered;
+}
+
+define('CAS_SERVER_COOKIE_NAME', 'TGCCAS');

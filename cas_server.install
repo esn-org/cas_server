@@ -1,0 +1,182 @@
+<?php
+// $Id$ 
+
+function cas_server_schema() {
+  $schema = array();
+  $schema['cas_server_service'] = array(
+    'description' => t('A single sign on session'),
+    'fields' => array(
+      'service_ticket_id' => array(
+        'description' => t('Internal ticket id'),
+        'type' => 'serial',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+        'length' => 10,
+      ),
+      'uid' => array(
+        'description' => t('The uid that this service request is associated with.'),
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+        'length' => 10,
+      ),
+      'tgc' => array(
+        'description' => t('This is the automatically generated ticket granting cookie identifier associated with the session. This identifier is stored in a cookie on the client\'s web browser.'),
+        'type' => 'varchar',
+        'not null' => TRUE,
+        'length' => 255,
+      ),
+      'service_url' => array(
+        'description' => t('The service url that is requesting access.'),
+        'type' => 'varchar',
+        'length' => 512,
+        'not null' => TRUE,
+      ),
+      'service_ticket' => array(
+        'description' => t('The unique service ticket'),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'current_valid_ticket' => array(
+        'description' => t('Whether or not this is the current ticket to be used for validation'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'length' => 1,
+        'default' => 1,
+      ),
+      'renewal_ticket' => array(
+        'description' => t('This is a boolean value that is set to true if the associated service ticket is being sent back from an actual login. Some services may require the user login again to reverify their identity. This stores whether or not the user just logged in as part of generating this service ticket.'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'length' => '1',
+        'default' => 0,
+      ),
+      'expiration_time' => array(
+        'description' => t('This is the expiration time of the ticket. This is usually set to 5 minutes after the service ticket is created.'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'disp-width' => '10',
+      ),
+    ),
+    'primary key' => array('service_ticket_id'),
+    /*'indexes' => array(
+      'weight' => array('weight', 'title'),
+    ),*/
+  );
+  
+  $schema['cas_server_proxy_granting'] = array(
+    'description' => t('A proxy granting ticket'),
+    'fields' => array(
+      'proxy_granting_ticket_id' => array(
+        'description' => t('Internal ticket id'),
+        'type' => 'serial',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+        'length' => 10,
+      ),
+      'service_ticket_id' => array(
+        'description' => t('The service ticket that this proxy was obtained with'),
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+        'length' => 10,
+      ),
+      'callback_url' => array(
+        'description' => t('The url that was called with the pgt and pgtiou'),
+        'type' => 'varchar',
+        'length' => 512,
+        'not null' => TRUE,
+      ),
+      'proxy_ticket' => array(
+        'description' => t('The unique proxy ticket id'),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'proxy_ticket_iou' => array(
+        'description' => t('The unique proxy ticket iou that the requesting service uses to connect the id and iou'),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'current_valid_ticket' => array(
+        'description' => t('Whether or not this is the current ticket to be used for validation'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'length' => 1,
+        'default' => 1,
+      ),
+    ),
+    'primary key' => array('proxy_granting_ticket_id'),
+    /*'indexes' => array(
+      'weight' => array('weight', 'title'),
+    ),*/
+  );
+  
+  $schema['cas_server_proxy'] = array(
+    'description' => t('A proxy ticket'),
+    'fields' => array(
+      'proxy_ticket_id' => array(
+        'description' => t('Internal ticket id'),
+        'type' => 'serial',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+        'length' => 10,
+      ),
+      'proxy_granting_ticket_id' => array(
+        'description' => t('The proxy granting ticket that was used to obtain this proxy ticket'),
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+        'length' => 10,
+      ),
+      'target_service' => array(
+        'description' => t('The service that is to use this proxy ticket'),
+        'type' => 'varchar',
+        'length' => 512,
+        'not null' => TRUE,
+      ),
+      'proxy_ticket' => array(
+        'description' => t('The unique proxy ticket id'),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'current_valid_ticket' => array(
+        'description' => t('Whether or not this is the current ticket to be used for validation'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'length' => 1,
+        'default' => 1,
+      ),
+      'expiration_time' => array(
+        'description' => t('This is the expiration time of the ticket. This is usually set to 5 minutes after the ticket is created.'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'disp-width' => '10',
+      ),
+    ),
+    'primary key' => array('proxy_ticket_id'),
+    /*'indexes' => array(
+      'weight' => array('weight', 'title'),
+    ),*/
+  );
+  return $schema;
+}
+
+function cas_server_install() {
+  drupal_install_schema('cas_server');
+}
+
+function cas_server_uninstall() {
+  drupal_uninstall_schema('cas_server');
+  variable_del('cas_server_warning_box');
+  variable_del('cas_server_username_value');
+}
