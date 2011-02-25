@@ -1,5 +1,4 @@
 <?php
-// $Id$ 
 
 function cas_server_admin_form() {
   $form = array();

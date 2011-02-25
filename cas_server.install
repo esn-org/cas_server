@@ -1,5 +1,4 @@
 <?php
-// $Id$ 
 
 function cas_server_schema() {
   $schema = array();

@@ -1,5 +1,4 @@
 <?php
-// $Id$ 
 
 /**
  * The callback when someone visits cas_server/login
