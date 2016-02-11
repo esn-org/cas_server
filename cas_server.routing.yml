@@ -1,0 +1,49 @@
+cas_server.settings:
+  path: '/admin/config/people/cas_server'
+  defaults:
+    _form: '\Drupal\cas_server\Form\CasServerSettings'
+    _title: 'CAS Server settings'
+  requirements:
+    _permission: 'administer site configuration'
+cas_server.login:
+  path: '/cas/login'
+  defaults:
+    _controller: '\Drupal\cas_server\Controller\UserActionController::login'
+  requirements:
+    _access: 'TRUE'
+cas_server.logout:
+  path: '/cas/logout'
+  defaults:
+    _controller: 'Drupal\cas_server\Controller\UserActionController::logout'
+  requirements:
+    _access: 'TRUE'
+cas_server.validate1:
+  path: '/cas/validate'
+  defaults:
+    _controller: 'Drupal\cas_server\Controller\TicketValidationController::validate1'
+  requirements:
+    _access: 'TRUE'
+cas_server.validate2:
+  path: '/cas/serviceValidate'
+  defaults:
+    _controller: 'Drupal\cas_server\Controller\TicketValidationController::validate2'
+  requirements:
+    _access: 'TRUE'
+cas_server.proxy_validate2:
+  path: '/cas/proxyValidate'
+  defaults:
+    _controller: 'Drupal\cas_server\Controller\TicketValidationController::proxyValidate2'
+  requirements:
+    _access: 'TRUE'
+cas_server.validate3:
+  path: '/cas/p3/serviceValidate'
+  defaults:
+    _controller: 'Drupal\cas_server\Controller\TicketValidationController::validate3'
+  requirements:
+    _access: 'TRUE'
+cas_server.proxy_validate3:
+  path: '/cas/p3/proxyValidate'
+  defaults:
+    _controller: 'Drupal\cas_server\Controller\TicketValidationController::proxyValidate3'
+  requirements:
+    _access: 'TRUE'
