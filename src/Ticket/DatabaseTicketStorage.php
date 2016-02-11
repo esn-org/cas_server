@@ -40,7 +40,7 @@ class DatabaseTicketStorage implements TicketStorageInterface {
     $this->connection->insert('cas_server_ticket_store')
       ->fields(
         array('id', 'expiration', 'type', 'session', 'service'),
-        array($ticket->id, $ticket->expirationTime, 'service', $ticket->session, $ticket->service),
+        array($ticket->id, date('Y-m-d H:i:s', $ticket->expirationTime), 'service', $ticket->session, $ticket->service),
       )
       ->execute();
   }
@@ -56,7 +56,7 @@ class DatabaseTicketStorage implements TicketStorageInterface {
       ->fetch();
     if (!empty($result)) {
       if ('type' == 'service') {
-        return new ServiceTicket($result->id, $result->expiration, $result->service, $result->session);
+        return new ServiceTicket($result->id, strtotime($result->expiration), $result->service, $result->session);
       }
       else {
         throw new TicketTypeException();
@@ -93,7 +93,7 @@ class DatabaseTicketStorage implements TicketStorageInterface {
     $this->connection->insert('cas_server_ticket_store')
       ->fields(
         array('id', 'expiration', 'type', 'session', 'service'),
-        array($ticket->id, $ticket->expirationTime, 'proxy', $ticket->session, $ticket->service),
+        array($ticket->id, date('Y-m-d H:i:s', $ticket->expirationTime), 'proxy', $ticket->session, $ticket->service),
       )
       ->execute();
   }
@@ -109,10 +109,10 @@ class DatabaseTicketStorage implements TicketStorageInterface {
       ->fetch();
     if (!empty($result)) {
       if ('type' == 'service') {
-        return new ServiceTicket($result->id, $result->expiration, $result->service, $result->session);
+        return new ServiceTicket($result->id, strtotime($result->expiration), $result->service, $result->session);
       }
       else if ('type' == 'proxy') {
-        return new ProxyTicket($result->id, $result->expiration, $result->service, $result->session);
+        return new ProxyTicket($result->id, strtotime($result->expiration), $result->service, $result->session);
       }
       else {
         throw new TicketTypeException();
@@ -149,7 +149,7 @@ class DatabaseTicketStorage implements TicketStorageInterface {
     $this->connection->insert('cas_server_ticket_store')
       ->fields(
         array('id', 'expiration', 'type', 'session'),
-        array($ticket->id, $ticket->expirationTime, 'proxygranting', $ticket->session),
+        array($ticket->id, date('Y-m-d H:i:s', $ticket->expirationTime), 'proxygranting', $ticket->session),
       )
       ->execute();
   }
@@ -165,7 +165,7 @@ class DatabaseTicketStorage implements TicketStorageInterface {
       ->fetch();
     if (!empty($result)) {
       if ('type' == 'proxygranting') {
-        return new ProxyGrantingTicket($result->id, $result->expiration, $result->session);
+        return new ProxyGrantingTicket($result->id, strtotime($result->expiration), $result->session);
       }
       else {
         throw new TicketTypeException();
@@ -202,7 +202,7 @@ class DatabaseTicketStorage implements TicketStorageInterface {
     $this->connection->insert('cas_server_ticket_store')
       ->fields(
         array('id', 'expiration', 'type', 'session'),
-        array($ticket->id, $ticket->expirationTime, 'ticketgranting', $ticket->session),
+        array($ticket->id, date('Y-m-d H:i:s', $ticket->expirationTime), 'ticketgranting', $ticket->session),
       )
       ->execute();
   }
@@ -218,7 +218,7 @@ class DatabaseTicketStorage implements TicketStorageInterface {
       ->fetch();
     if (!empty($result)) {
       if ('type' == 'ticketgranting') {
-        return new TicketGrantingTicket($result->id, $result->expiration, $result->session);
+        return new TicketGrantingTicket($result->id, strtotime($result->expiration), $result->session);
       }
       else {
         throw new TicketTypeException();
