@@ -29,21 +29,42 @@ class TicketValidationControllerTest extends UnitTestCase {
   protected $requestStack;
 
   /**
+   * The mocked ticket storage.
+   * @var \Drupal\cas_server\Ticket\TicketStorageInterface|\PHPUnit_Framework_MockObject_MockObject
+   */
+  protected $ticketStore;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp() {
     parent::setUp();
 
     $this->requestStack = $this->getMock('\Symfony\Component\HttpFoundation\RequestStack');
+    $this->ticketStore = $this->getMock('\Drupal\cas_server\Ticket\TicketStorageInterface');
   }
 
   /**
    * Test CASv1 validation.
    *
    * @covers ::validate1
+   *
+   * @dataProvider validate1DataProvider
    */
-  public function testValidate1() {
+  public function testValidate1($request, $ticket) {
     // @TODO
+
+  }
+
+  /**
+   * Provide parameters for testValidate1.
+   *
+   * @return array
+   *   Parameters.
+   *
+   * @see \Drupal\Tests\cas_server\Unit\Controller\TicketValidationController::testValidate1
+   */
+  public function validate1DataProvider() {
   }
 
   /**
