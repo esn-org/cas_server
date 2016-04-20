@@ -53,6 +53,47 @@ abstract class Ticket {
     $this->id = $ticket_id;
     $this->expirationTime = $timestamp;
     $this->session = $session_id;
+    $this->user = $username;
+  }
+
+  /**
+   * Return the user.
+   *
+   * @return string
+   *   The user property.
+   */
+  public function getUser() {
+    return $this->user;
+  }
+
+  /**
+   * Return the id of the ticket.
+   *
+   * @return string
+   *   The id property.
+   */
+  public function getId() {
+    return $this->id;
+  }
+
+  /**
+   * Return the expiration time.
+   *
+   * @return string
+   *   The expiration time.
+   */
+  public function getExpirationTime() {
+    return $this->expirationTime;
+  }
+
+  /**
+   * Return the session.
+   *
+   * @return string
+   *   The session.
+   */
+  public function getSession() {
+    return $this->session;
   }
 
 }

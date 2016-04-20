@@ -59,7 +59,7 @@ class DatabaseTicketStorage implements TicketStorageInterface {
         return new ServiceTicket($result->id, strtotime($result->expiration), $result->session, $result->user, $result->service, $result->renew);
       }
       else {
-        throw new TicketTypeException();
+        throw new TicketTypeException('Expected ticket of type service; found ticket of type ' . $result->type);
       }
     }
     else {
@@ -115,7 +115,7 @@ class DatabaseTicketStorage implements TicketStorageInterface {
         return new ProxyTicket($result->id, strtotime($result->expiration), $result->session, $result->user, $result->session, $result->renew);
       }
       else {
-        throw new TicketTypeException();
+        throw new TicketTypeException('Expected ticket of type service or proxy; found ticket of type ' . $result->type);
       }
     }
     else {
@@ -168,7 +168,7 @@ class DatabaseTicketStorage implements TicketStorageInterface {
         return new ProxyGrantingTicket($result->id, strtotime($result->expiration), $result->session, $result->user);
       }
       else {
-        throw new TicketTypeException();
+        throw new TicketTypeException('Expected ticket of type proxygranting; found ticket of type ' . $result->type);
       }
     }
     else {
@@ -221,7 +221,7 @@ class DatabaseTicketStorage implements TicketStorageInterface {
         return new TicketGrantingTicket($result->id, strtotime($result->expiration), $result->session, $result->user);
       }
       else {
-        throw new TicketTypeException();
+        throw new TicketTypeException('Expected ticket of type ticketgranting; found ticket of type ' . $result->type);
       }
     }
     else {
@@ -232,7 +232,7 @@ class DatabaseTicketStorage implements TicketStorageInterface {
   /**
    * {@inheritdoc}
    */
-  public function deleteTicketGrantingTicket(TicketGrantingTicket $ticket) {
+  public function deleteTicket(Ticket $ticket) {
     $this->connection->delete('cas_server_ticket_store')
       ->condition('id', $ticket->id)
       ->execute();
