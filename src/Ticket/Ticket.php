@@ -31,6 +31,13 @@ abstract class Ticket {
   private $session;
 
   /**
+   * @var string
+   *
+   * The username of the user who requested the ticket.
+   */
+  private $user;
+
+  /**
    * Constructor.
    *
    * @param string $ticket_id
@@ -39,8 +46,10 @@ abstract class Ticket {
    *   The expiration time of the ticket.
    * @param string $session_id
    *   The hashed session id.
+   * @param string $username
+   *   The username of requestor.
    */
-  public function __construct($ticket_id, $timestamp, $session_id) {
+  public function __construct($ticket_id, $timestamp, $session_id, $username) {
     $this->id = $ticket_id;
     $this->expirationTime = $timestamp;
     $this->session = $session_id;

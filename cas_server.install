@@ -37,10 +37,21 @@ function cas_server_schema() {
         'length' => 128,
         'not null' => TRUE,
       ),
+      'user' => array(
+        'description' => 'The username of the user requesting ticket.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+      ),
       'service' => array(
         'description' => 'For service and proxy tickets, what service the ticket is valid for.',
         'type' => 'text',
         'size' => 'normal',
+        'not null' => FALSE,
+      ),
+      'renew' => array(
+        'description' => 'Whether or not this ticket was generated with direct presentation of credentials.',
+        'type' => 'int',
         'not null' => FALSE,
       ),
     ),
