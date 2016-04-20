@@ -1,0 +1,11 @@
+services:
+  cas_server.storage:
+    class: Drupal\cas_server\Ticket\DatabaseTicketStorage
+    arguments: ['@database']
+  cas_server.logger:
+    class: Drupal\cas_server\Logger\DebugLogger
+    arguments: ['@config.factory', ['@logger.factory']
+  cas_server.config_helper:
+    class: Drupal\cas_server\Configuration\ConfigHelper
+    arguments: ['@config.factory']
+
