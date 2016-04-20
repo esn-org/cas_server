@@ -8,14 +8,54 @@
 namespace Drupal\cas_server\Controller;
 
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
-use Drupal\Core\Routing\TrustedRedirectResponse;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Drupal\cas_server\Ticket\TicketStorageInterface;
+use Drupal\cas_server\Exception\TicketTypeException;
+use Drupal\cas_server\Exception\TicketMissingException;
+use Drupal\cas_server\Logger\DebugLogger;
+use Drupal\cas_server\Configuration\ConfigHelper;
 
 /**
  * Class TicketValidationController.
  */
 class TicketValidationController implements ContainerInjectionInterface {
+
+  /**
+   * Cas protocol version 1 validation request.
+   *
+   * @var int
+   */
+  const CAS_PROTOCOL_1 = 0;
+
+  /**
+   * Cas protocol 2 service validation request.
+   *
+   * @var int
+   */
+  const CAS_PROTOCOL_2_SERVICE = 1;
+
+  /**
+   * Cas protocol 2 proxy validation request.
+   *
+   * @var int
+   */
+  const CAS_PROTOCOL_2_PROXY = 2;
+
+  /**
+   * Cas protocol 3 service validation request.
+   *
+   * @var int
+   */
+  const CAS_PROTOCOL_3_SERVICE = 3;
+
+  /**
+   * Cas protocol 3 proxy validation request.
+   *
+   * @var int
+   */
+  const CAS_PROTOCOL_3_PROXY = 4;
 
   /**
    * Used to get the query string parameters from the request.
@@ -25,56 +65,409 @@ class TicketValidationController implements ContainerInjectionInterface {
   protected $requestStack;
 
   /**
+   * The ticket store.
+   *
+   * @var TicketStorageInterface
+   */
+  protected $ticketStore;
+
+  /**
+   * The logger.
+   *
+   * @var DebugLogger
+   */
+  protected $logger;
+
+  /**
+   * The configuration helper.
+   *
+   * @var ConfigHelper
+   */
+  protected $configHelper;
+
+  /**
    * Constructor.
    *
    * @param RequestStack $request_stack
    *   Symfony request stack.
+   * @param TicketStorageInterface $ticket_store
+   *   The ticket store.
+   * @param DebugLogger $debug_logger
+   *   The logger.
    */
-  public function __construct(RequestStack $request_stack) {
+  public function __construct(RequestStack $request_stack, TicketStorageInterface $ticket_store, DebugLogger $debug_logger, ConfigHelper $config_helper) {
     $this->requestStack = $request_stack;
+    $this->ticketStore = $ticket_store;
+    $this->logger = $debug_logger;
+    $this->configHelper = $config_helper;
   }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static($container->get('request_stack'));
+    return new static($container->get('request_stack'), $container->get('cas_server.storage'), $container->get('cas_server.logger'), $container->get('cas_server.config_helper'));
   }
 
   /**
-   * Handles a validation request for CASv1.
+   * Global handler for validation requests.
+   *
+   * This function handles the top-level requirements of a validation request
+   * and then delegates out to the relevant protocol-specific handler to
+   * generate responses. This is done to avoid duplication of code.
+   *
+   * @param $validation_type int
+   *   An integer representing which type of validation request this is.
    */
-  public function validate1() {
-    // @TODO
+  public function validate($validation_type) {
+    $request = $this->requestStack->getCurrentRequest();
+    if ($request->request->has('format')) {
+      if ($request->request->get('format') == 'JSON') {
+        $format = 'json';
+      }
+      else {
+        $format = 'xml';
+      }
+    }
+    else {
+      $format = 'xml';
+    }
+
+    if ($request->request->has('ticket') && $request->request->has('service') {
+      $ticket_string = $reqeust->request->get('ticket');
+      $service_string = urldecode($request->request->get('service'));
+      $renew = $request->request->has('renew') ? TRUE : FALSE;
+      if ($request->request->has('format')) {
+        if ($request->request->get('format') == 'JSON') {
+          $format = 'json';
+        }
+        else {
+          $format = 'xml';
+        }
+      }
+      else {
+        $format = 'xml';
+      }
+      
+      // Load the ticket. If it doesn't exist or is the wrong type, return the
+      // appropriate failure response.
+      try {
+        switch ($validation_type) {
+          case self::CAS_PROTOCOL_1:
+          case self::CAS_PROTOCOL_2_SERVICE:
+          case self::CAS_PROTOCOL_3_SERVICE:
+            $ticket = $this->ticketStore->retrieveServiceTicket($ticket_string);
+            break;
+          case self::CAS_PROTOCOL_2_PROXY:
+          case self::CAS_PROTOCOL_3_PROXY:
+            $ticket = $this->ticketStore->retrieveProxyTicket($ticket_string);
+            break;
+        }
+      }
+      catch (TicketTypeException $e) {
+        $this->logger->log("Failed to validate ticket: $ticket_string. " . $e ->getMessage());
+        return $this->generateTicketTypeResponse($validation_type, $format);
+      }
+      catch (TicketMissingException $e) {
+        $this->logger->log("Failed to validate ticket: $ticket_string. Ticket was not found in ticket store.");
+        return $this->generateTicketMissingResponse($validation_type, $format);
+      }
+
+      // Check expiration time against request time.
+      if ($this->requestTime() > $ticket->getExpirationTime()) {
+        $this->logger->log("Failed to validate ticket: $ticket_string. Ticket had expired.");
+        return $this->generateTicketExpiredResponse($validation_type, $format, $ticket);
+      }
+
+      // Check for a service mismatch.
+      if ($service_string != $ticket->getService()) {
+        $this->logger->log("Failed to validate ticket: $ticket_string. Supplied service $service_string did not match ticket service " . $ticket->getService());
+
+        // Have to delete the ticket.
+        $this->ticketStore->deleteServiceTicket($ticket);
+
+        return $this->generateTicketWrongServiceResponse($validation_type, $format, $ticket);
+      }
+
+      // Check against renew parameter.
+      if ($renew && !$ticket->getRenew()) {
+        $this->logger->log("Failed to validate ticket: $ticket_string. Supplied service required direct presentation of credentials.");
+        return $this->generateTicketRenewResponse($validation_type, $format, $ticket);
+      }
+
+      // TODO: pgt stuff
+      if ($request->request->has('pgtUrl')) {
+
+      }
+      else {
+        $pgtIou = FALSE;
+      }
+      
+      // TODO: success
+      return $this->generateTicketValidationSuccess($validation_type, $format, $ticket, $pgtIou);
+
+
+    }
+    else {
+      $this->logger->log("Validation failed due to missing vital parameters.");
+      return $this->generateMissingParametersResponse($validation_type, $format);
+    }
+
   }
 
   /**
-   * Handles a validation request for CASv2.
+   * Generate a response for failed renew param.
+   *
+   * @param int $validation_type
+   *   The Type of validation request.
+   * @param string $format
+   *   Either XML or JSON
+   * @param Ticket $ticket
+   *   The ticket object for context
+   * @return Response
+   *   A Response object with the failure.
    */
-  public function validate2() {
-    // @TODO
+  private function generateTicketRenewResponse($validation_type, $format, $ticket) {
+    if ($validation_type == CAS_PROTOCOL_1) {
+      return $this->generateVersion1Failure();
+    }
+    if ($format == 'xml') {
+      $response_text =
+        '<cas:serviceResponse xmlns:cas="http://www.yale.edu/tp/cas">
+          <cas:authenticationFailure code="INVALID_TICKET">
+           Ticket did not come from initial login and renew was set
+          </cas:authenticationFailure>
+         </cas:serviceResponse>';
+    }
+    else if ($format == 'json') {
+      // TODO
+    }
 
+    return Response::create($response_text, 200);
   }
 
   /**
-   * Handles a proxy validation request for CASv2.
+   * Generate a response for incorrect service.
+   *
+   * @param int $validation_type
+   *   The Type of validation request.
+   * @param string $format
+   *   Either XML or JSON
+   * @param Ticket $ticket
+   *   The ticket object for context
+   * @return Response
+   *   A Response object with the failure.
    */
-  public function proxyValidate2() {
-    // @TODO
+  private function generateTicketWrongServiceResponse($validation_type, $format, $ticket) {
+    if ($validation_type == CAS_PROTOCOL_1) {
+      return $this->generateVersion1Failure();
+    }
+    if ($format == 'xml') {
+      $response_text =
+        '<cas:serviceResponse xmlns:cas="http://www.yale.edu/tp/cas">
+          <cas:authenticationFailure code="INVALID_SERVICE">
+           Provided service did not match ticket service
+          </cas:authenticationFailure>
+         </cas:serviceResponse>';
+    }
+    else if ($format == 'json') {
+      // TODO
+    }
+
+    return Response::create($response_text, 200);
   }
 
   /**
-   * Handles a validation request for CASv3.
+   * Generate a response for expired ticket.
+   *
+   * @param int $validation_type
+   *   The Type of validation request.
+   * @param string $format
+   *   Either XML or JSON
+   * @param Ticket $ticket
+   *   The ticket object for context
+   * @return Response
+   *   A Response object with the failure.
    */
-  public function validate3() {
-    // @TODO
+  private function generateTicketExpiredResponse($validation_type, $format, $ticket) {
+    if ($validation_type == CAS_PROTOCOL_1) {
+      return $this->generateVersion1Failure();
+    }
+    if ($format == 'xml') {
+      $response_text =
+        '<cas:serviceResponse xmlns:cas="http://www.yale.edu/tp/cas">
+          <cas:authenticationFailure code="INVALID_TICKET">
+           Ticket is expired
+          </cas:authenticationFailure>
+         </cas:serviceResponse>';
+    }
+    else if ($format == 'json') {
+      // TODO
+    }
+
+    return Response::create($response_text, 200);
   }
 
   /**
-   * Handles a proxy validation request for CASv3.
+   * Generate a response for missing ticket.
+   *
+   * @param int $validation_type
+   *   The Type of validation request.
+   * @param string $format
+   *   Either XML or JSON
+   * @return Response
+   *   A Response object with the failure.
    */
-  public function proxyValidate3() {
-    // @TODO
+  private function generateTicketMissingResponse($validation_type, $format) {
+    if ($validation_type == CAS_PROTOCOL_1) {
+      return $this->generateVersion1Failure();
+    }
+    if ($format == 'xml') {
+      $response_text =
+        '<cas:serviceResponse xmlns:cas="http://www.yale.edu/tp/cas">
+          <cas:authenticationFailure code="INVALID_TICKET">
+           Ticket not present in ticket store
+          </cas:authenticationFailure>
+         </cas:serviceResponse>';
+    }
+    else if ($format == 'json') {
+      // TODO
+    }
+
+    return Response::create($response_text, 200);
   }
 
+
+
+  /**
+   * Generate a response for ticket type.
+   *
+   * @param int $validation_type
+   *   The type of validation request.
+   * @param string $format
+   *   Either XML or JSON
+   * @return Response
+   *   A Response object with the failure.
+   */
+  private function generateTicketTypeResponse($validation_type, $format) {
+    if ($validation_type == CAS_PROTOCOL_1) {
+      return $this->generateVersion1Failure();
+    }
+    if ($format == 'xml') {
+      $response_text =
+        '<cas:serviceResponse xmlns:cas="http://www.yale.edu/tp/cas">
+          <cas:authenticationFailure code="INVALID_TICKET_SPEC">
+           Ticket was of the incorrect type
+          </cas:authenticationFailure>
+         </cas:serviceResponse>';
+    }
+    else if ($format == 'json') {
+      // TODO
+    }
+
+    return Response::create($response_text, 200);
+  }
+
+  /**
+   * Generate a response for missing parameters.
+   *
+   * @param int $validation_type
+   *   The type of validation request.
+   * @param string $format
+   *   Either XML or JSON
+   * @return Response
+   *   A Response object with the failure.
+   */
+  private function generateMissingParametersResponse($validation_type) {
+    if ($validation_type == CAS_PROTOCOL_1) {
+      return $this->generateVersion1Failure();
+    }
+    if ($format == 'xml') {
+      $response_text = 
+        '<cas:serviceResponse xmlns:cas="http://www.yale.edu/tp/cas">
+          <cas:authenticationFailure code="INVALID_REQUEST">
+            Missing required request parameters
+          </cas:authenticationFailure>
+         </cas:serviceResponse>';
+    }
+    else if ($format == 'json') {
+      //TODO
+      $response_text = '';
+    }
+
+    return Response::create($response_text, 200);
+  }
+
+  /**
+   * Generate the generic Cas protocol version 1 not valid response.
+   *
+   * @return Response
+   *   A Response object with the failure.
+   */
+  private function generateVersion1Failure() {
+    return Response::create("no\n", 200);
+  }
+
+  /**
+   * Generate a ticket validation success message.
+   *
+   * @return Response
+   *   A Response object with the success message, with optional attribute blocks.
+   */
+  private function generateTicketValidationSuccess($validation_type, $format, $ticket, $pgtIou) {
+    if ($validation_type == CAS_PROTOCOL_1) {
+      return $this->generateVersion1Success($ticket);
+    }
+    $attributes = $this->configHelper->getAttributesForService($ticket->getService());
+
+    if ($format == 'xml') {
+      $response_text = "<cas:serviceResponse xmlns:cas='http://www.yale.edu/tp/cas'>
+        <cas:authenticationSuccess>
+          <cas:user>" . $ticket->getUser() . "</cas:user>";
+      if (!empty($attributes)) {
+        $account = $this->userLoadByName($ticket->getUser());
+        $response_text .= "<cas:attributes>\n";
+        foreach ($attributes as $attr) {
+          $response_text .= "<cas:$attr>" . $account->get($attr) . "</cas:$attr>";
+        }
+        $response_text .= "</cas:attributes>\n";
+      }
+
+      if ($pgtIou) {
+        $reponse_text .= "<cas:proxyGrantingTicket>$pgtIou</cas:proxyGrantingTicket>";
+      }
+      $response_text .= "</cas:authenticationSuccess>\n</cas:serviceResponse>";
+
+    }
+    else if ($format == 'json') {
+      //TODO
+    }
+
+    return Response::create($response_text, 200);
+  }
+
+  /**
+   * Generate the generic Cas protocol version 1 valid response.
+   *
+   * @param Ticket $ticket
+   *   The ticket for this request.
+   * @return Response
+   *   A Response object with the success and username.
+   */
+  private function generateVersion1Success($ticket) {
+    return Response::create("yes\n" . $ticket->getUser() . "\n", 200);
+  }
+
+  /**
+   * Encapsulates user_load_by_name.
+   *
+   * @param string $username
+   *   The username to load
+   *
+   * @return \Drupal\user\Entity\User
+   *   The user object.
+   */
+  private function userLoadByName($username) {
+    return user_load_by_name($username);
+  }
 }
