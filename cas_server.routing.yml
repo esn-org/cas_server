@@ -52,5 +52,9 @@ cas_server.proxy_validate3:
     validation_type: 4
   requirements:
     _access: 'TRUE'
+cas_server.proxy:
+  path: '/cas/proxy'
+  defaults:
+    _controller: 'Drupal\cas_server\Controller\ProxyController::proxy'
   requirements:
     _access: 'TRUE'
