@@ -59,5 +59,16 @@ Class ConfigHelper {
     return [];
   }
 
+  /**
+   * Return the timeout for a proxy-granting ticket.
+   *
+   * @return int
+   *   The number of seconds a proxy-granting ticket is valid.
+   */
+  public function getProxyGrantingTicketTimeout() {
+    // TODO
+    return 0;
+  }
+
 
 }

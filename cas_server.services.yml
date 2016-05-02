@@ -8,4 +8,7 @@ services:
   cas_server.config_helper:
     class: Drupal\cas_server\Configuration\ConfigHelper
     arguments: ['@config.factory']
+  cas_server.ticket_factory:
+    class: Drupal\cas_server\Ticket\TicketFactory
+    arguments: ['@cas_server.storage', '@cas_server.config_helper', '@session_manager']
 
