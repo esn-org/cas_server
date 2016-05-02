@@ -16,6 +16,11 @@ use Drupal\cas_server\Exception\TicketTypeException;
 use Drupal\cas_server\Exception\TicketMissingException;
 use Drupal\cas_server\Logger\DebugLogger;
 use Drupal\cas_server\Configuration\ConfigHelper;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\TransferException;
+use Drupal\Component\Utility\Crypt;
+use Drupal\cas_server\Ticket\TicketFactory;
+use Drupal\cas_server\Ticket\ProxyTicket;
 
 /**
  * Class TicketValidationController.
@@ -86,6 +91,20 @@ class TicketValidationController implements ContainerInjectionInterface {
   protected $configHelper;
 
   /**
+   * The http client.
+   *
+   * @var Client
+   */
+  protected $httpClient;
+
+  /**
+   * The ticket factory.
+   *
+   * @var TicketFactory
+   */
+  protected $ticketFactory;
+
+  /**
    * Constructor.
    *
    * @param RequestStack $request_stack
@@ -94,19 +113,27 @@ class TicketValidationController implements ContainerInjectionInterface {
    *   The ticket store.
    * @param DebugLogger $debug_logger
    *   The logger.
+   * @param ConfigHelper $config_helper
+   *   The cas server configuration helper.
+   * @param Client $http_client
+   *   The HTTP Client library.
+   * @param TicketFactory $ticket_factory
+   *   The CAS ticket factory.
    */
-  public function __construct(RequestStack $request_stack, TicketStorageInterface $ticket_store, DebugLogger $debug_logger, ConfigHelper $config_helper) {
+  public function __construct(RequestStack $request_stack, TicketStorageInterface $ticket_store, DebugLogger $debug_logger, ConfigHelper $config_helper, Client $http_client, TicketFactory $ticket_factory) {
     $this->requestStack = $request_stack;
     $this->ticketStore = $ticket_store;
     $this->logger = $debug_logger;
     $this->configHelper = $config_helper;
+    $this->httpClient = $http_client;
+    $this->ticketFactory = $ticket_factory;
   }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static($container->get('request_stack'), $container->get('cas_server.storage'), $container->get('cas_server.logger'), $container->get('cas_server.config_helper'));
+    return new static($container->get('request_stack'), $container->get('cas_server.storage'), $container->get('cas_server.logger'), $container->get('cas_server.config_helper'), $container->get('http_client'));
   }
 
   /**
@@ -195,15 +222,22 @@ class TicketValidationController implements ContainerInjectionInterface {
         return $this->generateTicketRenewResponse($validation_type, $format, $ticket);
       }
 
-      // TODO: pgt stuff
+      // Handle proxy callback procedure.
       if ($request->request->has('pgtUrl')) {
-
+        $pgtIou = $this->proxyCallback($request->request->get('pgtUrl'), $ticket);
+        if ($pgtIou === FALSE) {
+          return $this->generateTicketInvalidProxyCallbackResponse($validation_type, $format);
+        }
       }
       else {
         $pgtIou = FALSE;
       }
+
+      // Validation success.
+      if ($ticket instanceof ProxyTicket) {
+        return $this->generateProxyTicketValidationSuccess($format, $ticket, $pgtIou);
+      }
       
-      // TODO: success
       return $this->generateTicketValidationSuccess($validation_type, $format, $ticket, $pgtIou);
 
 
@@ -378,7 +412,7 @@ class TicketValidationController implements ContainerInjectionInterface {
    * @return Response
    *   A Response object with the failure.
    */
-  private function generateMissingParametersResponse($validation_type) {
+  private function generateMissingParametersResponse($validation_type, $format) {
     if ($validation_type == CAS_PROTOCOL_1) {
       return $this->generateVersion1Failure();
     }
@@ -387,6 +421,36 @@ class TicketValidationController implements ContainerInjectionInterface {
         '<cas:serviceResponse xmlns:cas="http://www.yale.edu/tp/cas">
           <cas:authenticationFailure code="INVALID_REQUEST">
             Missing required request parameters
+          </cas:authenticationFailure>
+         </cas:serviceResponse>';
+    }
+    else if ($format == 'json') {
+      //TODO
+      $response_text = '';
+    }
+
+    return Response::create($response_text, 200);
+  }
+
+  /**
+   * Generate a response for invalide proxy callback.
+   *
+   * @param int $validation_type
+   *   The type of validation request.
+   * @param string $format
+   *   Either XML or JSON
+   * @return Response
+   *   A Response object with the failure.
+   */
+  private function generateTicketInvalidProxyCallbackResponse($validation_type, $format) {
+    if ($validation_type == CAS_PROTOCOL_1) {
+      return $this->generateVersion1Failure();
+    }
+    if ($format == 'xml') {
+      $response_text = 
+        '<cas:serviceResponse xmlns:cas="http://www.yale.edu/tp/cas">
+          <cas:authenticationFailure code="INVALID_PROXY_CALLBACK">
+            The credentials specified for proxy authentication do not meet security requirements.
           </cas:authenticationFailure>
          </cas:serviceResponse>';
     }
@@ -444,6 +508,114 @@ class TicketValidationController implements ContainerInjectionInterface {
     }
 
     return Response::create($response_text, 200);
+  }
+
+  /**
+   * Generate a proxy ticket validation success message.
+   *
+   * @param string $format
+   *   Response text format; XML or JSON
+   * @param Ticket $ticket
+   *   The ticket that was validated.
+   * @param string $pgtIou
+   *   The pgtIou, if applicable.
+   *
+   * @return Response
+   *   A Response object with the success message, with optional attribute blocks.
+   */
+  private function generateProxyTicketValidationSuccess($format, $ticket, $pgtIou) {
+    $attributes = $this->configHelper->getAttributesForService($ticket->getService());
+
+    if ($format == 'xml') {
+      $response_text = "<cas:serviceResponse xmlns:cas='http://www.yale.edu/tp/cas'>
+        <cas:authenticationSuccess>
+          <cas:user>" . $ticket->getUser() . "</cas:user>";
+      if (!empty($attributes)) {
+        $account = $this->userLoadByName($ticket->getUser());
+        $response_text .= "<cas:attributes>\n";
+        foreach ($attributes as $attr) {
+          $response_text .= "<cas:$attr>" . $account->get($attr) . "</cas:$attr>";
+        }
+        $response_text .= "</cas:attributes>\n";
+      }
+
+      if ($pgtIou) {
+        $response_text .= "<cas:proxyGrantingTicket>$pgtIou</cas:proxyGrantingTicket>";
+      }
+
+      $response_text .= "<cas:proxies>";
+      foreach ($ticket->getProxyChain() as $pgt_url) {
+        $response_text .= "<cas:proxy>$pgt_url</cas:proxy>";
+      }
+      $response_text .= "</cas:proxies>";
+
+      $response_text .= "</cas:authenticationSuccess>\n</cas:serviceResponse>";
+
+    }
+    else if ($format == 'json') {
+      //TODO
+    }
+
+    return Response::create($response_text, 200);
+
+
+  }
+
+
+  /**
+   * Verify the proxy callback url and order a proxy granting ticket issued.
+   *
+   * @param string $pgtUrl
+   *   The supplied callback url to be verified.
+   * @param Ticket $ticket
+   *   The ticket that was used for this request.
+   *
+   * @return string|bool
+   *   A pgtIou string to pass along in the response, or FALSE on failure.
+   */
+  private function proxyCallback($pgtUrl) {
+    $url = urldecode($pgtUrl);
+    if (parse_url($url, PHP_URL_SCHEME) !== 'https') {
+      return FALSE;
+    }
+    // Verify identity of callback url.
+    try {
+      $this->httpClient->get($url, ['verify' => TRUE]);
+    }
+    catch (TransferException $e) {
+      return FALSE;
+    }
+    // Order a proxy granting ticket.
+    if ($ticket instanceof ProxyTicket) {
+      $proxy_chain = array_reverse(array_push(array_reverse($ticket->getProxyChain()), $url));
+    }
+    else {
+      $proxy_chain = [$url];
+    }
+
+    $pgtIou = 'PGTIOU-';
+    $pgtIou .= Crypt::randomBytesBase64(32);
+
+    $pgt = $this->ticketFactory->createProxyGrantingTicket($proxy_chain);
+    $pgtId = $pgt->getId();
+
+    // Send a GET request with pgtId and pgtIou. Verify response code.
+    if (!empty(parse_url($url, PHP_URL_QUERY))) {
+      $full_url = $url .= "&pgtIou=$pgtIou&pgtId=$pgtId";
+    }
+    else {
+      $full_url = $url .= "?pgtIou=$pgtIou&pgtId=$pgtId";
+    }
+    try {
+      $this->httpClient->get($full_url, ['verify' => TRUE]);
+    }
+    catch (TransferException $e) {
+      // If verification failed, delete proxy granting ticket.
+      $this->ticketStore->deleteProxyGrantingTicket($pgt);
+      return FALSE;
+    }
+
+    return $pgtIou;
   }
 
   /**
