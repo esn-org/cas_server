@@ -40,7 +40,7 @@ class DatabaseTicketStorage implements TicketStorageInterface {
     $this->connection->insert('cas_server_ticket_store')
       ->fields(
         array('id', 'expiration', 'type', 'session', 'user', 'service', 'renew'),
-        array($ticket->id, date('Y-m-d H:i:s', $ticket->expirationTime), 'service', $ticket->session, $ticket->user, $ticket->service, $ticket->renew),
+        array($ticket->getId(), date('Y-m-d H:i:s', $ticket->getExpirationTime()), 'service', $ticket->getSession(), $ticket->getUser(), $ticket->getService(), $ticket->getRenew()),
       )
       ->execute();
   }
@@ -92,8 +92,8 @@ class DatabaseTicketStorage implements TicketStorageInterface {
   public function storeProxyTicket(ProxyTicket $ticket) {
     $this->connection->insert('cas_server_ticket_store')
       ->fields(
-        array('id', 'expiration', 'type', 'session', 'user', 'service', 'renew'),
-        array($ticket->id, date('Y-m-d H:i:s', $ticket->expirationTime), 'proxy', $ticket->session, $ticket->user, $ticket->service, $ticket->renew),
+        array('id', 'expiration', 'type', 'session', 'user', 'service', 'renew', 'proxy_chain'),
+        array($ticket->getId(), date('Y-m-d H:i:s', $ticket->getExpirationTime()), 'proxy', $ticket->getSession(), $ticket->getUser(), $ticket->getService(), $ticket->getRenew(), serialize($ticket->getProxyChain())),
       )
       ->execute();
   }
@@ -103,7 +103,7 @@ class DatabaseTicketStorage implements TicketStorageInterface {
    */
   public function retrieveProxyTicket($ticket_string) {
     $result = $this->connection->select('cas_server_ticket_store', 'c')
-      ->fields('c', array('id', 'expiration', 'type', 'session', 'user', 'service', 'renew')
+      ->fields('c', array('id', 'expiration', 'type', 'session', 'user', 'service', 'renew', 'proxy_chain')
       ->condition('id', $ticket_string)
       ->execute()
       ->fetch();
@@ -112,7 +112,7 @@ class DatabaseTicketStorage implements TicketStorageInterface {
         return new ServiceTicket($result->id, strtotime($result->expiration), $result->session, $result->user, $result->service, $result->renew);
       }
       else if ($result->type == 'proxy') {
-        return new ProxyTicket($result->id, strtotime($result->expiration), $result->session, $result->user, $result->session, $result->renew);
+        return new ProxyTicket($result->id, strtotime($result->expiration), $result->session, $result->user, $result->session, $result->renew, unserialize($result->proxy_chain));
       }
       else {
         throw new TicketTypeException('Expected ticket of type service or proxy; found ticket of type ' . $result->type);
@@ -148,8 +148,8 @@ class DatabaseTicketStorage implements TicketStorageInterface {
   public function storeProxyGrantingTicket(ProxyGrantingTicket $ticket) {
     $this->connection->insert('cas_server_ticket_store')
       ->fields(
-        array('id', 'expiration', 'type', 'session', 'user'),
-        array($ticket->id, date('Y-m-d H:i:s', $ticket->expirationTime), 'proxygranting', $ticket->session, $ticket->user),
+        array('id', 'expiration', 'type', 'session', 'user', 'proxy_chain'),
+        array($ticket->getId(), date('Y-m-d H:i:s', $ticket->getExpirationTime()), 'proxygranting', $ticket->getSession(), $ticket->getUser(), serialize($ticket->getProxyChain()),
       )
       ->execute();
   }
@@ -159,13 +159,13 @@ class DatabaseTicketStorage implements TicketStorageInterface {
    */
   public function retrieveProxyGrantingTicket($ticket_string) {
     $result = $this->connection->select('cas_server_ticket_store', 'c')
-      ->fields('c', array('id', 'expiration', 'type', 'session', 'user', 'service')
+      ->fields('c', array('id', 'expiration', 'type', 'session', 'user', 'proxy_chain')
       ->condition('id', $ticket_string)
       ->execute()
       ->fetch();
     if (!empty($result)) {
       if ($result->type == 'proxygranting') {
-        return new ProxyGrantingTicket($result->id, strtotime($result->expiration), $result->session, $result->user);
+        return new ProxyGrantingTicket($result->id, strtotime($result->expiration), $result->session, $result->user, unserialize($result->proxy_chain);
       }
       else {
         throw new TicketTypeException('Expected ticket of type proxygranting; found ticket of type ' . $result->type);
@@ -202,7 +202,7 @@ class DatabaseTicketStorage implements TicketStorageInterface {
     $this->connection->insert('cas_server_ticket_store')
       ->fields(
         array('id', 'expiration', 'type', 'session', 'user'),
-        array($ticket->id, date('Y-m-d H:i:s', $ticket->expirationTime), 'ticketgranting', $ticket->session, $ticket->user),
+        array($ticket->getId(), date('Y-m-d H:i:s', $ticket->getExpirationTime()), 'ticketgranting', $ticket->getSession(), $ticket->getUser()),
       )
       ->execute();
   }

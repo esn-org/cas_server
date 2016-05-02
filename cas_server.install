@@ -54,6 +54,12 @@ function cas_server_schema() {
         'type' => 'int',
         'not null' => FALSE,
       ),
+      'proxy_chain' => array(
+        'description' => 'For proxy and proxy-granting tickets, the list of proxies for the ticket.',
+        'type' => 'text',
+        'length' => 4096,
+        'not null' => FALSE,
+      ),
     ),
     'primary key' => array(
       'id',
