@@ -70,5 +70,40 @@ Class ConfigHelper {
     return 0;
   }
 
+  /**
+   * Return the timeout for a ticket-granting ticket.
+   *
+   * @return int
+   *   The number of seconds a ticket-granting ticket is valid.
+   */
+  public function getTicketGrantingTicketTimeout() {
+    // TODO
+    return 0;
+  }
+
+  /**
+   * Return the timeout for a proxy ticket.
+   *
+   * @return int
+   *   The number of seconds a proxy ticket is valid.
+   */
+  public function getProxyTicketTimeout() {
+    // TODO
+    return 0;
+  }
+
+  /**
+   * Return the timeout for a service ticket.
+   *
+   * @return int
+   *   The number of seconds a service ticket is valid.
+   */
+  public function getServiceTicketTimeout() {
+    // TODO
+    return 0;
+  }
+
+
+
 
 }
