@@ -233,7 +233,9 @@ class TicketValidationController implements ContainerInjectionInterface {
         $pgtIou = FALSE;
       }
 
-      // Validation success.
+      // Validation success, first delete the ticket.
+      $this->ticketStore->deleteServiceTicket($ticket);
+
       if ($ticket instanceof ProxyTicket) {
         return $this->generateProxyTicketValidationSuccess($format, $ticket, $pgtIou);
       }
