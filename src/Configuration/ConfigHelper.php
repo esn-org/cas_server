@@ -103,6 +103,19 @@ Class ConfigHelper {
     return 0;
   }
 
+  /**
+   * Check whether a service is configured for single sign on.
+   *
+   * @param string $service
+   *
+   * @return bool
+   *   Whether or not the service is authorized.
+   */
+  public function verifyServiceForSso($service) {
+    // TODO
+    return true;
+  }
+
 
 
 
