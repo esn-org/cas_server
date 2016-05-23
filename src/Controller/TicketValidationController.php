@@ -133,7 +133,7 @@ class TicketValidationController implements ContainerInjectionInterface {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static($container->get('request_stack'), $container->get('cas_server.storage'), $container->get('cas_server.logger'), $container->get('cas_server.config_helper'), $container->get('http_client'));
+    return new static($container->get('request_stack'), $container->get('cas_server.storage'), $container->get('cas_server.logger'), $container->get('cas_server.config_helper'), $container->get('http_client'), $container->get('cas_server.ticket_factory'));
   }
 
   /**
