@@ -74,7 +74,7 @@ class UserLogin extends FormBase {
       '#required' => TRUE,
     );
 
-    $lt = 'LT-' . Crypt::randomByptesBase64(32);
+    $lt = 'LT-' . Crypt::randomBytesBase64(32);
     $_SESSION['cas_lt'] = $lt;
 
     $form['lt'] = array(
