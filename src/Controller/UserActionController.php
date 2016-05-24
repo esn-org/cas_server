@@ -159,7 +159,7 @@ class UserActionController implements ContainerInjectionInterface {
 
     // If user has an active single sign on session and renew is not set,
     // generate a service ticket and redirect.
-    if (!$renew && $this->userHasSingleOnSession($service)) {
+    if (!$renew && $this->userHasSingleSignOnSession($service)) {
       $st = $this->ticketFactory->createServiceTicket($service, FALSE);
       $url = Url::fromUri($service, ['query' => ['ticket' => $st->getId()]]);
       return TrustedRedirectResponse::create($url->toString(), 302);
