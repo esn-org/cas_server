@@ -105,8 +105,8 @@ class UserLogin extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $username = trim($form_state->getValue('username');
-    $password = trim($form_state->getValue('password');
+    $username = trim($form_state->getValue('username'));
+    $password = trim($form_state->getValue('password'));
     $service = $form_state->getValue('service');
     if ($uid = $this->authService->authenticate($username, $password)) {
       $account = User::load($uid);
