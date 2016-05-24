@@ -40,7 +40,7 @@ class DatabaseTicketStorage implements TicketStorageInterface {
     $this->connection->insert('cas_server_ticket_store')
       ->fields(
         array('id', 'expiration', 'type', 'session', 'user', 'service', 'renew'),
-        array($ticket->getId(), date('Y-m-d H:i:s', $ticket->getExpirationTime()), 'service', $ticket->getSession(), $ticket->getUser(), $ticket->getService(), $ticket->getRenew()),
+        array($ticket->getId(), date('Y-m-d H:i:s', $ticket->getExpirationTime()), 'service', $ticket->getSession(), $ticket->getUser(), $ticket->getService(), $ticket->getRenew())
       )
       ->execute();
   }
