@@ -87,6 +87,11 @@ class UserLogin extends FormBase {
       '#value' => $service,
     );
 
+    $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => $this->t('Submit'),
+    );
+
     return $form;
   }
 
