@@ -16,6 +16,7 @@ use Drupal\cas_server\Configuration\ConfigHelper;
 use Drupal\cas_server\Ticket\TicketFactory;
 use Drupal\cas_server\Ticket\TicketStorageInterface;
 use Drupal\cas_server\Logger\DebugLogger;
+use Drupal\Core\Url;
 
 /**
  * Class UserActionController.
@@ -149,8 +150,8 @@ class UserActionController implements ContainerInjectionInterface {
     // generate a service ticket and redirect.
     if (!$renew && $this->userHasSingleOnSession($service)) {
       $st = $this->ticketFactory->createServiceTicket($service, FALSE);
-      $url = $this->appendTicketParamToService($service, $st->getId());
-      return TrustedRedirectResponse::create($url, 302);
+      $url = Url::fromUri($service, ['query' => ['ticket' => $st->getId()]]);
+      return TrustedRedirectResponse::create($url->toString(), 302);
     }
     
     // If gateway is set and user is not logged in, redirect them back to
@@ -215,32 +216,6 @@ class UserActionController implements ContainerInjectionInterface {
       return TRUE;
     }
     return FALSE;
-  }
-
-  /**
-   * Appends a ticket parameter to service url.
-   *
-   * @param string $service
-   *   The service url.
-   * @param string $id
-   *   The ticket id to append.
-   */
-  private function appendTicketParamToService($service, $id) {
-    $parsedService = parse_url($service);
-    if ($parsedService['fragment'] != NULL) {
-      $length = strlen($parsedService['fragment']) + 1;
-      $service = substr($service, 0, -$length);
-    }
-    if ($parsedService['path'] == NULL) {
-      $service .= '/';
-    }
-    $sep = ($parsedService['query'] == NULL) ? '?' : '&';
-    $service .= $sep . "ticket=" . $id;
-    if ($parsedService['fragment'] != NULL) {
-      $service .= '#' . $parsedService['fragment'];
-    }
-
-    return $service;
   }
 
   /**
