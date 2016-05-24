@@ -130,11 +130,11 @@ Interface TicketStorageInterface {
    * @param \Drupal\cas_server\Ticket\TicketGrantingTicket $ticket
    *   The ticket to delete from storage.
    */
-  public deleteTicketGrantingTicket(TicketGrantingTicket $ticket);
+  public function deleteTicketGrantingTicket(TicketGrantingTicket $ticket);
 
   /**
    * Purge expired ticket-granting tickets.
    */
-  public purgeExpiredTicketGrantingTickets();
+  public function purgeExpiredTicketGrantingTickets();
 
 }
