@@ -149,7 +149,7 @@ class DatabaseTicketStorage implements TicketStorageInterface {
     $this->connection->insert('cas_server_ticket_store')
       ->fields(
         array('id', 'expiration', 'type', 'session', 'user', 'proxy_chain'),
-        array($ticket->getId(), date('Y-m-d H:i:s', $ticket->getExpirationTime()), 'proxygranting', $ticket->getSession(), $ticket->getUser(), serialize($ticket->getProxyChain())
+        array($ticket->getId(), date('Y-m-d H:i:s', $ticket->getExpirationTime()), 'proxygranting', $ticket->getSession(), $ticket->getUser(), serialize($ticket->getProxyChain()))
       )
       ->execute();
   }
