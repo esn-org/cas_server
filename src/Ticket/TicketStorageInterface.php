@@ -103,7 +103,7 @@ Interface TicketStorageInterface {
   /**
    * Purge expired proxy-granting tickets.
    */
-  public purgeExpiredProxyGrantingTicket();
+  public function purgeExpiredProxyGrantingTicket();
   
   /**
    * Stores a ticket-granting ticket.
