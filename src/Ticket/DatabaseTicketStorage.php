@@ -165,7 +165,7 @@ class DatabaseTicketStorage implements TicketStorageInterface {
       ->fetch();
     if (!empty($result)) {
       if ($result->type == 'proxygranting') {
-        return new ProxyGrantingTicket($result->id, strtotime($result->expiration), $result->session, $result->user, unserialize($result->proxy_chain);
+        return new ProxyGrantingTicket($result->id, strtotime($result->expiration), $result->session, $result->user, unserialize($result->proxy_chain));
       }
       else {
         throw new TicketTypeException('Expected ticket of type proxygranting; found ticket of type ' . $result->type);
