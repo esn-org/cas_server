@@ -144,7 +144,7 @@ class UserActionController implements ContainerInjectionInterface {
     // or a simple page to logged in users explaining their state.
     if (is_null($service)) {
       if (!$this->userHasSingleSignOnSession(NULL)) {
-        return \Drupal::formBuilder()->getForm('cas_server_user_login', '');
+        return \Drupal::formBuilder()->getForm('\Drupal\cas_server\Form\UserLogin', '');
       }
       else {
         return $this->generateLoggedInMessage();
@@ -172,7 +172,7 @@ class UserActionController implements ContainerInjectionInterface {
     }
 
     // Present the user with a login form.
-    return \Drupal::formBuilder()->getForm('cas_server_user_login', $service);
+    return \Drupal::formBuilder()->getForm('\Drupal\cas_server\Form\UserLogin', $service);
 
   }
 
