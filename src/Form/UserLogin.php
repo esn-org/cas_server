@@ -7,34 +7,46 @@
 
 namespace Drupal\cas_server\Form;
 
-use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\user\UserAuthInterface;
+use Drupal\user\Entity\User;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Component\Utility\Crypt;
+use Drupal\cas_server\Ticket\TicketFactory;
+use Drupal\cas_server\Configuration\ConfigHelper;
+use Drupal\Core\Url;
 
 /**
- * Class CasServerSettings.
+ * Class UserLogin.
  *
  * @codeCoverageIgnore
  */
-class CasServerSettings extends FormBase {
+class UserLogin extends FormBase {
 
   /**
    * Constructs a \Drupal\cas_server\Form\UserLogin object.
    *
-   * @param ConfigFactoryInterface $config_factory
-   *   The factory for configuration objects.
+   * @param UserAuthInterface $user_auth
+   *   The authentication provider.
+   * @param TicketFactory $ticket_factory
+   *   The ticket factory.
+   * @param ConfigHelper $config_helper
+   *   The configuration helper.
    */
-  public function __construct(ConfigFactoryInterface $config_factory) {
-    parent::__construct($config_factory);
+  public function __construct(UserAuthInterface $user_auth, TicketFactory $ticket_factory, ConfigHelper $config_helper) {
+    parent::__construct();
+    $this->authService = $user_auth;
+    $this->ticketFactory = $ticket_factory;
+    $this->configHelper = $config_helper;
   }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static($container->get('config.factory'));
+    return new static($container->get('user.auth'), $container->get('cas_server.ticket_factory'), $container->get('cas_server.config_helper'));
   }
 
   /**
@@ -47,9 +59,34 @@ class CasServerSettings extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
-    // @TODO
+  public function buildForm(array $form, FormStateInterface $form_state, $service = '') {
+    $form['username'] = array(
+      '#type' => 'textfield',
+      '#title' => $this->t('Username'),
+      '#size' => 60,
+      '#maxlength' => 128,
+      '#required' => TRUE,
+    );
 
+    $form['password'] = array(
+      '#type' => 'password',
+      '#title' => $this->t('Password'),
+      '#size' => 60,
+      '#required' => TRUE,
+    );
+
+    $lt = 'LT-' . Crypt::randomByptesBase64(32);
+    $_SESSION['cas_lt'] = $lt;
+
+    $form['lt'] = array(
+      '#type' => 'hidden',
+      '#value' => $lt,
+    );
+
+    $form['service'] = array(
+      '#type' => 'hidden',
+      '#value' => $service,
+    );
 
     return parent::buildForm($form, $form_state);
   }
@@ -58,8 +95,9 @@ class CasServerSettings extends FormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-    // @TODO
-    
+    if ($form_state->getValue('lt') != $_SESSION['cas_lt']) {
+      $form_state->setErrorByName('lt', $this->t('Login ticket invalid. Please try again.'));
+    }
     return parent::validateForm($form, $form_state);
   }
 
@@ -67,7 +105,25 @@ class CasServerSettings extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    // @TODO
+    $username = trim($form_state->getValue('username');
+    $password = trim($form_state->getValue('password');
+    $service = $form_state->getValue('service');
+    if ($uid = $this->authService->authenticate($username, $password)) {
+      $account = User::load($uid);
+      user_login_finalize($account);
+      if (empty($service) || $this->configHelper->verifyServiceForSso($service)) {
+        $tgt = $this->ticketFactory->createTicketGrantingTicket();
+        setcookie('cas_tgc', $tgt->getId(), REQUEST_TIME + $this->configHelper->getTicketGrantingTicketTimeout(), '/cas');
+      }
+      if (!empty($service)) {
+        $st = $this->ticketFactory->createServiceTicket($service, TRUE);
+        $url = Url::fromUri($service, ['query' => ['ticket' => $st->getId()]]);
+        $form_state->setRedirectUrl($url);
+      }
+      else {
+        $form_state->setRedirectUrl(Url::fromRoute('cas_server.login'));
+      }
+    }
 
     parent::submitForm($form, $form_state);
   }
