@@ -87,7 +87,7 @@ class UserLogin extends FormBase {
       '#value' => $service,
     );
 
-    return parent::buildForm($form, $form_state);
+    return $form;
   }
 
   /**
@@ -97,7 +97,6 @@ class UserLogin extends FormBase {
     if ($form_state->getValue('lt') != $_SESSION['cas_lt']) {
       $form_state->setErrorByName('lt', $this->t('Login ticket invalid. Please try again.'));
     }
-    return parent::validateForm($form, $form_state);
   }
 
   /**
@@ -124,7 +123,6 @@ class UserLogin extends FormBase {
       }
     }
 
-    parent::submitForm($form, $form_state);
   }
 
 }
