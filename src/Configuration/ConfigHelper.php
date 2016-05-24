@@ -116,7 +116,34 @@ Class ConfigHelper {
     return true;
   }
 
+  /**
+   * Return the custom invalid service message, or FALSE
+   *
+   * @return string|bool
+   */
+  public function getInvalidServiceMessage() {
+    // TODO
+    return FALSE;
+  }
 
+  /**
+   * Return the custom user logout message, or FALSE
+   *
+   * @return string|bool
+   */
+  public function getUserLogoutMessage() {
+    // TODO
+    return FALSE;
+  }
 
+  /**
+   * Return the custom logged in message, or FALSE
+   *
+   * @return string|bool
+   */
+  public function getLoggedInMessage() {
+    // TODO
+    return FALSE;
+  }
 
 }

@@ -17,6 +17,7 @@ use Drupal\cas_server\Ticket\TicketFactory;
 use Drupal\cas_server\Ticket\TicketStorageInterface;
 use Drupal\cas_server\Logger\DebugLogger;
 use Drupal\Core\Url;
+use Drupal\Core\StringTranslation\TranslationInterface;
 
 /**
  * Class UserActionController.
@@ -66,6 +67,13 @@ class UserActionController implements ContainerInjectionInterface {
   protected $logger;
 
   /**
+   * The string translation service.
+   *
+   * @var TranslationInterface
+   */
+  protected $stringTranslation;
+
+  /**
    * Constructor.
    *
    * @param RequestStack $request_stack
@@ -80,21 +88,24 @@ class UserActionController implements ContainerInjectionInterface {
    *   The ticket store.
    * @param DebugLogger $debug_logger
    *   The logger.
+   * @param TranslationInterface $translation
+   *   The string translation service.
    */
-  public function __construct(RequestStack $request_stack, AccountProxyInterface $user, ConfigHelper $config_helper, TicketFactory $ticket_factory, TicketStorageInterface $ticket_store, DebugLogger $debug_logger) {
+  public function __construct(RequestStack $request_stack, AccountProxyInterface $user, ConfigHelper $config_helper, TicketFactory $ticket_factory, TicketStorageInterface $ticket_store, DebugLogger $debug_logger, TranslationInterface $translation) {
     $this->requestStack = $request_stack;
     $this->account = $user;
     $this->configHelper = $config_helper;
     $this->ticketFactory = $ticket_factory;
     $this->ticketStore = $ticket_store;
     $this->logger = $debug_logger;
+    $this->stringTranslation = $translation;
   }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static($container->get('request_stack'), $container->get('current_user'), $container->get('cas_server.config_helper'), $container->get('cas_server.ticket_factory'), $container->get('cas_server.storage'), $container->get('cas_server.logger'));
+    return new static($container->get('request_stack'), $container->get('current_user'), $container->get('cas_server.config_helper'), $container->get('cas_server.ticket_factory'), $container->get('cas_server.storage'), $container->get('cas_server.logger'), $container->get('string_translation'));
   }
 
   /**
@@ -217,6 +228,47 @@ class UserActionController implements ContainerInjectionInterface {
     }
     return FALSE;
   }
+
+  /**
+   * Markup for an invalid service message.
+   *
+   * @return array
+   *   A renderable array.
+   */
+  private function generateInvalidServiceMessage() {
+    $output['header'] = ['#markup' => '<h2>' . $this->stringTranslation->t('Invalid Service') . '</h2>'];
+    $message = $this->configHelper->getInvalidServiceMessage() || $this->stringTranslation->t('You have not requested a valid service.');
+    $output['message'] = ['#markup' => $message];
+
+    return $output;
+  }
+
+  /**
+   * Markup for logout message.
+   *
+   * @return array
+   *   A renderable array.
+   */
+  private function generateUserLogoutPage() {
+    $message = $this->configHelper->getUserLogoutMessage() || $this->stringTranslation->t('You have been logged out');
+    $output['message'] = ['#markup' => $message];
+
+    return $output;
+  }
+
+  /**
+   * Markup for logged in message.
+   *
+   * @return array
+   *   A renderable array.
+   */
+  private function generateLoggedInMessage() {
+    $message = $this->configHelper->getLoggedInMessage() || $this->stringTranslation->t('You are logged in to CAS single sign on.');
+    $output['message'] = ['#markup' => $message];
+
+    return $output;
+  }
+
 
   /**
    * Encapsulates user_logout.
