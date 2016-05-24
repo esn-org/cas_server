@@ -1,0 +1,50 @@
+cas_server.settings:
+  type: mapping
+  label: 'CAS Server settings'
+  mapping:
+    ticket:
+      type: mapping
+      label: 'Ticket Timeout Settings'
+      mapping:
+        service_ticket_timeout:
+          type: integer
+          label: 'Service Ticket Timeout (seconds)'
+        proxy_ticket_timeout:
+          type: integer
+          label: 'Proxy Ticket Timeout (seconds)'
+        proxy_granting_ticket_timeout:
+          type: integer
+          label: 'Proxy Granting Ticket Timeout (seconds)'
+        ticket_granting_ticket_timeout:
+          type: integer
+          label: 'Ticket Granting Ticket Timeout (seconds)'
+    messages:
+      type: mapping
+      label: 'Custom Messages'
+      mapping:
+        invalid_service:
+          type: string
+          label: 'Display Message for Invalid Service'
+        user_logout:
+          type: string
+          label: 'Display Message for User Logout'
+        logged_in:
+          type: string
+          label: 'Display Message for Logged In Users'
+    services:
+      type: sequence
+      sequence:
+        type: mapping
+        label: 'Service definitions'
+        mapping:
+          service:
+            type: string
+          sso:
+            type: boolean
+          attributes:
+            type: sequence
+            sequence:
+              type: string
+              label: 'User field attribute'
+            
+      

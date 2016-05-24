@@ -66,8 +66,7 @@ Class ConfigHelper {
    *   The number of seconds a proxy-granting ticket is valid.
    */
   public function getProxyGrantingTicketTimeout() {
-    // TODO
-    return 0;
+    return $this->settings->get('ticket.proxy_granting_ticket_timeout');
   }
 
   /**
@@ -77,8 +76,7 @@ Class ConfigHelper {
    *   The number of seconds a ticket-granting ticket is valid.
    */
   public function getTicketGrantingTicketTimeout() {
-    // TODO
-    return 0;
+    return $this->settings->get('ticket.ticket_granting_ticket_timeout');
   }
 
   /**
@@ -88,8 +86,7 @@ Class ConfigHelper {
    *   The number of seconds a proxy ticket is valid.
    */
   public function getProxyTicketTimeout() {
-    // TODO
-    return 0;
+    return $this->settings->get('ticket.proxy_ticket_timeout');
   }
 
   /**
@@ -99,8 +96,7 @@ Class ConfigHelper {
    *   The number of seconds a service ticket is valid.
    */
   public function getServiceTicketTimeout() {
-    // TODO
-    return 0;
+    return $this->settings->get('ticket.service_ticket_timeout');
   }
 
   /**
@@ -112,8 +108,7 @@ Class ConfigHelper {
    *   Whether or not the service is authorized.
    */
   public function verifyServiceForSso($service) {
-    // TODO
-    return true;
+    
   }
 
   /**
@@ -122,7 +117,9 @@ Class ConfigHelper {
    * @return string|bool
    */
   public function getInvalidServiceMessage() {
-    // TODO
+    if (!empty($m = $this->settings->get('messages.invalid_service'))) {
+      return $m;
+    }
     return FALSE;
   }
 
@@ -132,7 +129,9 @@ Class ConfigHelper {
    * @return string|bool
    */
   public function getUserLogoutMessage() {
-    // TODO
+    if (!empty($m = $this->settings->get('messages.user_logout'))) {
+      return $m;
+    }
     return FALSE;
   }
 
@@ -142,7 +141,9 @@ Class ConfigHelper {
    * @return string|bool
    */
   public function getLoggedInMessage() {
-    // TODO
+    if (!empty($m = $this->settings->get('messages.logged_in'))) {
+      return $m;
+    }
     return FALSE;
   }
 
