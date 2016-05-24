@@ -36,7 +36,6 @@ class UserLogin extends FormBase {
    *   The configuration helper.
    */
   public function __construct(UserAuthInterface $user_auth, TicketFactory $ticket_factory, ConfigHelper $config_helper) {
-    parent::__construct();
     $this->authService = $user_auth;
     $this->ticketFactory = $ticket_factory;
     $this->configHelper = $config_helper;
