@@ -251,16 +251,6 @@ class DatabaseTicketStorage implements TicketStorageInterface {
   /**
    * {@inheritdoc}
    */
-  public function purgeExpiredProxyGrantingTickets() {
-    $this->connection->delete('cas_server_ticket_store')
-      ->condition('type', 'proxygranting')
-      ->condition('expiration', date('Y-m-d H:i:s'), '<')
-      ->execute();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function deleteTicketGrantingTicket(TicketGrantingTicket $ticket) {
     $this->connection->delete('cas_server_ticket_store')
       ->condition('id', $ticket->id)
