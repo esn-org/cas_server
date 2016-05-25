@@ -13,14 +13,14 @@ class ServiceTicket extends Ticket {
    * @var string
    * The service this ticket was granted for.
    */
-  private $service;
+  protected $service;
 
   /**
    * @var bool
    * Whether or not this ticket was created by presentation of credentials, 
    * rather than a single sign-on session. For use with 'renew' parameter.
    */
-  private $renew;
+  protected $renew;
 
   /**
    * Constructs a service ticket.

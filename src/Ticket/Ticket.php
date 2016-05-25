@@ -14,28 +14,28 @@ abstract class Ticket {
    *
    * The ticket identifier string.
    */
-  private $id;
+  protected $id;
 
   /**
    * @var string
    *
    * A unix timestamp representing the expiration time of the ticket.
    */
-  private $expirationTime;
+  protected $expirationTime;
 
   /**
    * @var string
    *
    * A hashed session ID for the session that requested ticket.
    */
-  private $session;
+  protected $session;
 
   /**
    * @var string
    *
    * The username of the user who requested the ticket.
    */
-  private $user;
+  protected $user;
 
   /**
    * Constructor.

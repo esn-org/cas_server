@@ -14,7 +14,7 @@ class ProxyGrantingTicket extends Ticket {
    *
    * The chain of pgtUrls used to generate this ticket.
    */
-  private $proxyChain;
+  protected $proxyChain;
 
   /**
    * Constructor.

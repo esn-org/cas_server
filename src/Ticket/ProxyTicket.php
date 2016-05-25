@@ -14,7 +14,7 @@ class ProxyTicket extends ServiceTicket {
    *
    * The chain of pgtUrls used to generate this ticket.
    */
-  private $proxyChain;
+  protected $proxyChain;
   
   /**
    * Constructs a proxy ticket.
