@@ -72,7 +72,7 @@ class DatabaseTicketStorage implements TicketStorageInterface {
    */
   public function deleteServiceTicket(ServiceTicket $ticket) {
     $this->connection->delete('cas_server_ticket_store')
-      ->condition('id', $ticket->id)
+      ->condition('id', $ticket->getId())
       ->execute();
   }
 
@@ -128,7 +128,7 @@ class DatabaseTicketStorage implements TicketStorageInterface {
    */
   public function deleteProxyTicket(ProxyTicket $ticket) {
     $this->connection->delete('cas_server_ticket_store')
-      ->condition('id', $ticket->id)
+      ->condition('id', $ticket->getId())
       ->execute();
   }
   
@@ -181,7 +181,7 @@ class DatabaseTicketStorage implements TicketStorageInterface {
    */
   public function deleteProxyGrantingTicket(ProxyGrantingTicket $ticket) {
     $this->connection->delete('cas_server_ticket_store')
-      ->condition('id', $ticket->id)
+      ->condition('id', $ticket->getId())
       ->execute();
   }
 
@@ -234,7 +234,7 @@ class DatabaseTicketStorage implements TicketStorageInterface {
    */
   public function deleteTicket(Ticket $ticket) {
     $this->connection->delete('cas_server_ticket_store')
-      ->condition('id', $ticket->id)
+      ->condition('id', $ticket->getId())
       ->execute();
   }
 
@@ -253,7 +253,7 @@ class DatabaseTicketStorage implements TicketStorageInterface {
    */
   public function deleteTicketGrantingTicket(TicketGrantingTicket $ticket) {
     $this->connection->delete('cas_server_ticket_store')
-      ->condition('id', $ticket->id)
+      ->condition('id', $ticket->getId())
       ->execute();
   }
 
