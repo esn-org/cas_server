@@ -264,7 +264,7 @@ class TicketValidationController implements ContainerInjectionInterface {
    *   A Response object with the failure.
    */
   private function generateTicketRenewResponse($validation_type, $format, $ticket) {
-    if ($validation_type == CAS_PROTOCOL_1) {
+    if ($validation_type == self::CAS_PROTOCOL_1) {
       return $this->generateVersion1Failure();
     }
     if ($format == 'xml') {
@@ -295,7 +295,7 @@ class TicketValidationController implements ContainerInjectionInterface {
    *   A Response object with the failure.
    */
   private function generateTicketWrongServiceResponse($validation_type, $format, $ticket) {
-    if ($validation_type == CAS_PROTOCOL_1) {
+    if ($validation_type == self::CAS_PROTOCOL_1) {
       return $this->generateVersion1Failure();
     }
     if ($format == 'xml') {
@@ -326,7 +326,7 @@ class TicketValidationController implements ContainerInjectionInterface {
    *   A Response object with the failure.
    */
   private function generateTicketExpiredResponse($validation_type, $format, $ticket) {
-    if ($validation_type == CAS_PROTOCOL_1) {
+    if ($validation_type == self::CAS_PROTOCOL_1) {
       return $this->generateVersion1Failure();
     }
     if ($format == 'xml') {
@@ -355,7 +355,7 @@ class TicketValidationController implements ContainerInjectionInterface {
    *   A Response object with the failure.
    */
   private function generateTicketMissingResponse($validation_type, $format) {
-    if ($validation_type == CAS_PROTOCOL_1) {
+    if ($validation_type == self::CAS_PROTOCOL_1) {
       return $this->generateVersion1Failure();
     }
     if ($format == 'xml') {
@@ -386,7 +386,7 @@ class TicketValidationController implements ContainerInjectionInterface {
    *   A Response object with the failure.
    */
   private function generateTicketTypeResponse($validation_type, $format) {
-    if ($validation_type == CAS_PROTOCOL_1) {
+    if ($validation_type == self::CAS_PROTOCOL_1) {
       return $this->generateVersion1Failure();
     }
     if ($format == 'xml') {
@@ -415,7 +415,7 @@ class TicketValidationController implements ContainerInjectionInterface {
    *   A Response object with the failure.
    */
   private function generateMissingParametersResponse($validation_type, $format) {
-    if ($validation_type == CAS_PROTOCOL_1) {
+    if ($validation_type == self::CAS_PROTOCOL_1) {
       return $this->generateVersion1Failure();
     }
     if ($format == 'xml') {
@@ -445,7 +445,7 @@ class TicketValidationController implements ContainerInjectionInterface {
    *   A Response object with the failure.
    */
   private function generateTicketInvalidProxyCallbackResponse($validation_type, $format) {
-    if ($validation_type == CAS_PROTOCOL_1) {
+    if ($validation_type == self::CAS_PROTOCOL_1) {
       return $this->generateVersion1Failure();
     }
     if ($format == 'xml') {
@@ -481,7 +481,7 @@ class TicketValidationController implements ContainerInjectionInterface {
    *   A Response object with the success message, with optional attribute blocks.
    */
   private function generateTicketValidationSuccess($validation_type, $format, $ticket, $pgtIou) {
-    if ($validation_type == CAS_PROTOCOL_1) {
+    if ($validation_type == self::CAS_PROTOCOL_1) {
       return $this->generateVersion1Success($ticket);
     }
     $attributes = $this->configHelper->getAttributesForService($ticket->getService());
