@@ -114,26 +114,26 @@ class UserActionController implements ContainerInjectionInterface {
   public function login() {
     //TODO
     $request = $this->requestStack->getCurrentRequest();
-    $service = $request->request->has('service') ? urldecode($request->request->get('service')) : NULL;
-    
-    if ($request->request->has('gateway')) {
-      if ($request->request->get('gateway') == 'false') {
+    $service = $request->query->has('service') ? urldecode($request->query->get('service')) : NULL;
+
+    if ($request->query->has('gateway')) {
+      if ($request->query->get('gateway') == 'false') {
         $gateway = FALSE;
       }
       else {
-        $gateway = (bool)$request->request->get('gateway');
+        $gateway = (bool)$request->query->get('gateway');
       }
     }
     else {
       $gateway = FALSE;
     }
 
-    if ($request->request->has('renew')) {
-      if ($request->request->get('renew') == 'false') {
+    if ($request->query->has('renew')) {
+      if ($request->query->get('renew') == 'false') {
         $renew = FALSE;
       }
       else {
-        $renew = (bool)$request->request->get('renew');
+        $renew = (bool)$request->query->get('renew');
       }
     }
     else {
