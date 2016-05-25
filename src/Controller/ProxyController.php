@@ -92,8 +92,8 @@ class ProxyController implements ContainerInjectionInterface {
    */
   public function proxy() {
     $request = $this->requestStack->getCurrentRequest();
-    if ($request->request->has('format')) {
-      if ($request->request->get('format') == 'JSON') {
+    if ($request->query->has('format')) {
+      if ($request->query->get('format') == 'JSON') {
         $format = 'json';
       }
       else {
@@ -104,14 +104,14 @@ class ProxyController implements ContainerInjectionInterface {
       $format = 'xml';
     }
 
-    if ($request->request->has('pgt') && $request->request->has('targetService')) {
-      $service = urldecode($request->request->get('targetService'));
+    if ($request->query->has('pgt') && $request->query->has('targetService')) {
+      $service = urldecode($request->query->get('targetService'));
       if (!$this->configHelper->verifyServiceForSso($service)) {
         $this->logger->log("Failed to proxy $service. Service is not authorized for SSO.");
         return $this->generateUnauthorizedServiceProxyRequestResponse($format, $service);
       }
 
-      $pgt = $request->request->get('pgt');
+      $pgt = $request->query->get('pgt');
       try {
         $ticket = $this->ticketStore->retrieveProxyGrantingTicket($pgt);
       }

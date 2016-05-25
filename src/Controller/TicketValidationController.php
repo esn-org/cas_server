@@ -148,8 +148,8 @@ class TicketValidationController implements ContainerInjectionInterface {
    */
   public function validate($validation_type) {
     $request = $this->requestStack->getCurrentRequest();
-    if ($request->request->has('format')) {
-      if ($request->request->get('format') == 'JSON') {
+    if ($request->query->has('format')) {
+      if ($request->query->get('format') == 'JSON') {
         $format = 'json';
       }
       else {
@@ -160,12 +160,12 @@ class TicketValidationController implements ContainerInjectionInterface {
       $format = 'xml';
     }
 
-    if ($request->request->has('ticket') && $request->request->has('service')) {
-      $ticket_string = $reqeust->request->get('ticket');
-      $service_string = urldecode($request->request->get('service'));
-      $renew = $request->request->has('renew') ? TRUE : FALSE;
-      if ($request->request->has('format')) {
-        if ($request->request->get('format') == 'JSON') {
+    if ($request->query->has('ticket') && $request->query->has('service')) {
+      $ticket_string = $reqeust->query->get('ticket');
+      $service_string = urldecode($request->query->get('service'));
+      $renew = $request->query->has('renew') ? TRUE : FALSE;
+      if ($request->query->has('format')) {
+        if ($request->query->get('format') == 'JSON') {
           $format = 'json';
         }
         else {
@@ -223,8 +223,8 @@ class TicketValidationController implements ContainerInjectionInterface {
       }
 
       // Handle proxy callback procedure.
-      if ($request->request->has('pgtUrl')) {
-        $pgtIou = $this->proxyCallback($request->request->get('pgtUrl'), $ticket);
+      if ($request->query->has('pgtUrl')) {
+        $pgtIou = $this->proxyCallback($request->query->get('pgtUrl'), $ticket);
         if ($pgtIou === FALSE) {
           return $this->generateTicketInvalidProxyCallbackResponse($validation_type, $format);
         }
