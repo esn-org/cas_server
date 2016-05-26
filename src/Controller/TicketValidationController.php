@@ -21,6 +21,7 @@ use GuzzleHttp\Exception\TransferException;
 use Drupal\Component\Utility\Crypt;
 use Drupal\cas_server\Ticket\TicketFactory;
 use Drupal\cas_server\Ticket\ProxyTicket;
+use Drupal\cas_server\Ticket\Ticket;
 
 /**
  * Class TicketValidationController.
