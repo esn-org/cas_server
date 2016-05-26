@@ -47,4 +47,10 @@ cas_server.settings:
               type: string
               label: 'User field attribute'
             
-      
+    debugging:
+      type: mapping
+      label: 'Debugging Options'
+      mapping:
+        log:
+          type: boolean
+          label: 'Enable debugging log'

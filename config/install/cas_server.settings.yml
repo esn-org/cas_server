@@ -9,3 +9,6 @@ messages:
   user_logout: ''
   logged_in: ''
 
+debugging:
+  log: false
+
