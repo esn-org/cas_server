@@ -18,11 +18,14 @@ use Drupal\cas_server\Ticket\TicketStorageInterface;
 use Drupal\cas_server\Logger\DebugLogger;
 use Drupal\Core\Url;
 use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 /**
  * Class UserActionController.
  */
 class UserActionController implements ContainerInjectionInterface {
+
+  use StringTranslationTrait;
 
   /**
    * Used to get the query string parameters from the request.
@@ -237,8 +240,8 @@ class UserActionController implements ContainerInjectionInterface {
    *   A renderable array.
    */
   private function generateInvalidServiceMessage() {
-    $output['header'] = ['#markup' => '<h2>' . $this->stringTranslation->t('Invalid Service') . '</h2>'];
-    $message = $this->configHelper->getInvalidServiceMessage() || $this->stringTranslation->t('You have not requested a valid service.');
+    $output['header'] = ['#markup' => '<h2>' . $this->t('Invalid Service') . '</h2>'];
+    $message = $this->configHelper->getInvalidServiceMessage() || $this->t('You have not requested a valid service.');
     $output['message'] = ['#markup' => $message];
 
     return $output;
@@ -251,7 +254,7 @@ class UserActionController implements ContainerInjectionInterface {
    *   A renderable array.
    */
   private function generateUserLogoutPage() {
-    $message = $this->configHelper->getUserLogoutMessage() || $this->stringTranslation->t('You have been logged out');
+    $message = $this->configHelper->getUserLogoutMessage() || $this->t('You have been logged out');
     $output['message'] = ['#markup' => $message];
 
     return $output;
@@ -264,7 +267,7 @@ class UserActionController implements ContainerInjectionInterface {
    *   A renderable array.
    */
   private function generateLoggedInMessage() {
-    $message = $this->configHelper->getLoggedInMessage() || $this->stringTranslation->t('You are logged in to CAS single sign on.');
+    $message = $this->configHelper->getLoggedInMessage() || $this->t('You are logged in to CAS single sign on.');
     $output['message'] = ['#markup' => $message];
 
     return $output;
