@@ -11,7 +11,7 @@
 function cas_server_cron() {
   $ticket_store = \Drupal::service('cas_server.storage');
   $ticket_store->purgeUnvalidatedServiceTickets();
-  $ticket_store->purgeUnvalidateProxyTickets();
+  $ticket_store->purgeUnvalidatedProxyTickets();
   $ticket_store->purgeExpiredProxyGrantingTickets();
   $ticket_store->purgeExpiredTicketGrantingTickets();
 }
