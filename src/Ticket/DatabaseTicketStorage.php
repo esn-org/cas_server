@@ -257,5 +257,14 @@ class DatabaseTicketStorage implements TicketStorageInterface {
       ->execute();
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function deleteTicketsBySession($session) {
+    $this->connection->delete('cas_server_ticket_store')
+      ->condition('session', $session)
+      ->execute();
+  }
+
 
 }

@@ -19,6 +19,8 @@ use Drupal\cas_server\Logger\DebugLogger;
 use Drupal\Core\Url;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Session\SessionManagerInterface;
+use Drupal\Component\Utility\Crypt;
 
 /**
  * Class UserActionController.
@@ -77,6 +79,13 @@ class UserActionController implements ContainerInjectionInterface {
   protected $stringTranslation;
 
   /**
+   * The session manager.
+   *
+   * @var SessionManagerInterface;
+   */
+  protected $sessionManager;
+
+  /**
    * Constructor.
    *
    * @param RequestStack $request_stack
@@ -93,8 +102,10 @@ class UserActionController implements ContainerInjectionInterface {
    *   The logger.
    * @param TranslationInterface $translation
    *   The string translation service.
+   * @param SessionManagerInterface $session_manager
+   *   The session manager.
    */
-  public function __construct(RequestStack $request_stack, AccountProxyInterface $user, ConfigHelper $config_helper, TicketFactory $ticket_factory, TicketStorageInterface $ticket_store, DebugLogger $debug_logger, TranslationInterface $translation) {
+  public function __construct(RequestStack $request_stack, AccountProxyInterface $user, ConfigHelper $config_helper, TicketFactory $ticket_factory, TicketStorageInterface $ticket_store, DebugLogger $debug_logger, TranslationInterface $translation, SessionManagerInterface $session_manager) {
     $this->requestStack = $request_stack;
     $this->account = $user;
     $this->configHelper = $config_helper;
@@ -102,20 +113,20 @@ class UserActionController implements ContainerInjectionInterface {
     $this->ticketStore = $ticket_store;
     $this->logger = $debug_logger;
     $this->stringTranslation = $translation;
+    $this->sessionManager = $session_manager;
   }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static($container->get('request_stack'), $container->get('current_user'), $container->get('cas_server.config_helper'), $container->get('cas_server.ticket_factory'), $container->get('cas_server.storage'), $container->get('cas_server.logger'), $container->get('string_translation'));
+    return new static($container->get('request_stack'), $container->get('current_user'), $container->get('cas_server.config_helper'), $container->get('cas_server.ticket_factory'), $container->get('cas_server.storage'), $container->get('cas_server.logger'), $container->get('string_translation'), $container->get('session_manager'));
   }
 
   /**
    * Handles a page request for /cas/login.
    */
   public function login() {
-    //TODO
     $request = $this->requestStack->getCurrentRequest();
     $service = $request->query->has('service') ? urldecode($request->query->get('service')) : NULL;
 
@@ -187,7 +198,9 @@ class UserActionController implements ContainerInjectionInterface {
       unset($_COOKIE['cas_tgc']);
       setcookie('cas_tgc', '', REQUEST_TIME - 3600, '/cas');
     }
-    // TODO: destroy all tickets associated with this session
+    $session_id = $this->sessionManager->getId();
+    $hashed_id = Crypt::hashBase64($session_id);
+    $this->ticketStore->deleteTicketsBySession($hashed_id);
     $this->userLogout();
 
     return $this->generateUserLogoutPage();

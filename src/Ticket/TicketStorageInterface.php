@@ -137,4 +137,12 @@ Interface TicketStorageInterface {
    */
   public function purgeExpiredTicketGrantingTickets();
 
+  /**
+   * Delete all tickets associated with a given session.
+   *
+   * @param string $session
+   *   A hashed session ID to look up.
+   */
+  public function deleteTicketsBySession($session);
+
 }
