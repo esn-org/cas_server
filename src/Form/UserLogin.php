@@ -120,7 +120,7 @@ class UserLogin extends FormBase {
       }
       if (!empty($service)) {
         $st = $this->ticketFactory->createServiceTicket($service, TRUE);
-        $url = Url::fromUri($service, ['query' => ['ticket' => $st->getId()]]);
+        $url = Url::fromRoute('cas_server.login', [], ['query' => ['ticket' => $st->getId()]]);
         $form_state->setRedirectUrl($url);
       }
       else {

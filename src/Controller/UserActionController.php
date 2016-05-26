@@ -130,6 +130,13 @@ class UserActionController implements ContainerInjectionInterface {
     $request = $this->requestStack->getCurrentRequest();
     $service = $request->query->has('service') ? urldecode($request->query->get('service')) : NULL;
 
+    // If we have a ticket, it is because we've already processed the form and
+    // need to be redirected back to the service.
+    if ($request->query->has('ticket')) {
+      $url = Url::fromUri($service, ['query' => ['ticket' => $request->query->get('ticket')]]);
+      return TrustedRedirectResponse::create($url->toString(), 302);
+    }
+
     if ($request->query->has('gateway')) {
       if ($request->query->get('gateway') == 'false') {
         $gateway = FALSE;
