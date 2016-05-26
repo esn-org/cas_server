@@ -164,17 +164,6 @@ class TicketValidationController implements ContainerInjectionInterface {
       $ticket_string = $request->query->get('ticket');
       $service_string = urldecode($request->query->get('service'));
       $renew = $request->query->has('renew') ? TRUE : FALSE;
-      if ($request->query->has('format')) {
-        if ($request->query->get('format') == 'JSON') {
-          $format = 'json';
-        }
-        else {
-          $format = 'xml';
-        }
-      }
-      else {
-        $format = 'xml';
-      }
       
       // Load the ticket. If it doesn't exist or is the wrong type, return the
       // appropriate failure response.
@@ -239,7 +228,7 @@ class TicketValidationController implements ContainerInjectionInterface {
       if ($ticket instanceof ProxyTicket) {
         return $this->generateProxyTicketValidationSuccess($format, $ticket, $pgtIou);
       }
-      
+
       return $this->generateTicketValidationSuccess($validation_type, $format, $ticket, $pgtIou);
 
 
@@ -500,7 +489,7 @@ class TicketValidationController implements ContainerInjectionInterface {
       }
 
       if ($pgtIou) {
-        $reponse_text .= "<cas:proxyGrantingTicket>$pgtIou</cas:proxyGrantingTicket>";
+        $response_text .= "<cas:proxyGrantingTicket>$pgtIou</cas:proxyGrantingTicket>";
       }
       $response_text .= "</cas:authenticationSuccess>\n</cas:serviceResponse>";
 
@@ -575,7 +564,7 @@ class TicketValidationController implements ContainerInjectionInterface {
    * @return string|bool
    *   A pgtIou string to pass along in the response, or FALSE on failure.
    */
-  private function proxyCallback($pgtUrl) {
+  private function proxyCallback($pgtUrl, Ticket $ticket) {
     $url = urldecode($pgtUrl);
     if (parse_url($url, PHP_URL_SCHEME) !== 'https') {
       return FALSE;

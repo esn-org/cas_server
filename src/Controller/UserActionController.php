@@ -184,6 +184,7 @@ class UserActionController implements ContainerInjectionInterface {
       unset($_COOKIE['cas_tgc']);
       setcookie('cas_tgc', '', REQUEST_TIME - 3600, '/cas');
     }
+    // TODO: destroy all tickets associated with this session
     $this->userLogout();
 
     return $this->generateUserLogoutPage();

@@ -108,7 +108,8 @@ Class ConfigHelper {
    *   Whether or not the service is authorized.
    */
   public function verifyServiceForSso($service) {
-    
+    //TODO
+    return TRUE;
   }
 
   /**
