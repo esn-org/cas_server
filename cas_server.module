@@ -1,0 +1,19 @@
+<?php
+
+/**
+ * @file
+ * Contains hooks for CAS Server module.
+ */
+
+/**
+ * Implements hook_cron().
+ */
+function cas_server_cron() {
+  $ticket_store = \Drupal::service('cas_server.ticket_store');
+  $ticket_store->purgeUnvalidatedServiceTickets();
+  $ticket_store->purgeUnvalidateProxyTickets();
+  $ticket_store->purgeExpiredProxyGrantingTickets();
+  $ticket_store->purgeExpiredTicketGrantingTickets();
+}
+
+
