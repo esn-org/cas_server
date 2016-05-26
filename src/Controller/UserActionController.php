@@ -241,7 +241,8 @@ class UserActionController implements ContainerInjectionInterface {
    */
   private function generateInvalidServiceMessage() {
     $output['header'] = ['#markup' => '<h2>' . $this->t('Invalid Service') . '</h2>'];
-    $message = $this->configHelper->getInvalidServiceMessage() || $this->t('You have not requested a valid service.');
+    $m = $this->configHelper->getInvalidServiceMessage();
+    $message = $m ? $m : $this->t('You have not requested a valid service.');
     $output['message'] = ['#markup' => $message];
 
     return $output;
@@ -254,7 +255,8 @@ class UserActionController implements ContainerInjectionInterface {
    *   A renderable array.
    */
   private function generateUserLogoutPage() {
-    $message = $this->configHelper->getUserLogoutMessage() || $this->t('You have been logged out');
+    $m = $this->configHelper->getUserLogoutMessage();
+    $message = $m ? $m : $this->t('You have been logged out');
     $output['message'] = ['#markup' => $message];
 
     return $output;
@@ -267,7 +269,8 @@ class UserActionController implements ContainerInjectionInterface {
    *   A renderable array.
    */
   private function generateLoggedInMessage() {
-    $message = $this->configHelper->getLoggedInMessage() || $this->t('You are logged in to CAS single sign on.');
+    $m = $this->configHelper->getLoggedInMessage();
+    $message = $m ? $m : $this->t('You are logged in to CAS single sign on.');
     $output['message'] = ['#markup' => $message];
 
     return $output;
