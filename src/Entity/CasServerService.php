@@ -27,8 +27,8 @@ use Drupal\cas_server\CasServerServiceInterface;
  *   config_prefix = "cas_server_service",
  *   admin_permission = "administer site configuration",
  *   entity_keys = {
- *     "id" = "id"
- *     "label" = "label"
+ *     "id" = "id",
+ *     "label" = "label",
  *   },
  *   links = {
  *     "edit-form" = "/admin/config/people/cas_server/{cas_server_service}",
