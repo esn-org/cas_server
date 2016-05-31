@@ -72,13 +72,6 @@ class UserActionController implements ContainerInjectionInterface {
   protected $logger;
 
   /**
-   * The string translation service.
-   *
-   * @var TranslationInterface
-   */
-  protected $stringTranslation;
-
-  /**
    * The session manager.
    *
    * @var SessionManagerInterface;
