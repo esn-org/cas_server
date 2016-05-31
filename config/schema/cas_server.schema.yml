@@ -31,7 +31,7 @@ cas_server.settings:
         logged_in:
           type: string
           label: 'Display Message for Logged In Users'
-    services.*:
+    cas_server_service.*:
       type: config_entity
       label: 'Service definitions'
       mapping:
