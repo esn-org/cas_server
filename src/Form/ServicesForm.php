@@ -33,7 +33,7 @@ class ServicesForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public funciton form(array $form, FormStateInterface $form_state) {
+  public function form(array $form, FormStateInterface $form_state) {
     $form = parent::form($form, $form_state);
 
     $service = $this->entity;
