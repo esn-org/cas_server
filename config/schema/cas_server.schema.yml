@@ -31,21 +31,28 @@ cas_server.settings:
         logged_in:
           type: string
           label: 'Display Message for Logged In Users'
-    services:
-      type: sequence
-      sequence:
-        type: mapping
-        label: 'Service definitions'
-        mapping:
-          service:
+    services.*:
+      type: config_entity
+      label: 'Service definitions'
+      mapping:
+        label:
+          type: label
+          label: 'Name'
+        id:
+          type: string
+          label: 'Machine name'
+        service:
+          type: string
+          label: 'Service URL pattern'
+        sso:
+          type: boolean
+          label: 'Enable SSO'
+        attributes:
+          type: sequence
+          label: 'Released attributes'
+          sequence:
             type: string
-          sso:
-            type: boolean
-          attributes:
-            type: sequence
-            sequence:
-              type: string
-              label: 'User field attribute'
+            label: 'User field attribute'
             
     debugging:
       type: mapping

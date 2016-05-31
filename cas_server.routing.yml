@@ -5,18 +5,53 @@ cas_server.settings:
     _title: 'CAS Server settings'
   requirements:
     _permission: 'administer site configuration'
+
+entity.cas_server_service.collection:
+  path: '/admin/config/people/cas_server/services'
+  defaults:
+    _entity_list: 'cas_server_service'
+    _title: 'Service definitions'
+  requirements:
+    _permission: 'administer site configuration'
+
+entity.cas_server_service.add_form:
+  path: '/admin/config/people/cas_server/services/add'
+  defaults:
+    _entity_form: 'entity.cas_server_service.add_form'
+    _title: 'Add Service definition'
+  requirements:
+    _permission: 'administer site configuration'
+
+entity.cas_server_service.edit_form:
+  path: '/admin/config/people/cas_server/services/{cas_server_service}'
+  defaults:
+    _entity_form: 'entity.cas_server_service.edit'
+    _title: 'Edit Service definition'
+  requirements:
+    _permission: 'administer site configuration'
+
+entity.cas_server_service.delete_form:
+  path: '/admin/config/people/cas_server/services/{cas_server_service}/delete'
+  defaults:
+    _entity_form: 'cas_server_service.delete'
+    _title: 'Delete Service definition'
+  requirements:
+    _permission: 'administer site configuration'
+
 cas_server.login:
   path: '/cas/login'
   defaults:
     _controller: '\Drupal\cas_server\Controller\UserActionController::login'
   requirements:
     _access: 'TRUE'
+
 cas_server.logout:
   path: '/cas/logout'
   defaults:
     _controller: 'Drupal\cas_server\Controller\UserActionController::logout'
   requirements:
     _access: 'TRUE'
+
 cas_server.validate1:
   path: '/cas/validate'
   defaults:
@@ -24,6 +59,7 @@ cas_server.validate1:
     validation_type: 0
   requirements:
     _access: 'TRUE'
+
 cas_server.validate2:
   path: '/cas/serviceValidate'
   defaults:
@@ -31,6 +67,7 @@ cas_server.validate2:
     validation_type: 1
   requirements:
     _access: 'TRUE'
+
 cas_server.proxy_validate2:
   path: '/cas/proxyValidate'
   defaults:
@@ -38,6 +75,7 @@ cas_server.proxy_validate2:
     validation_type: 2
   requirements:
     _access: 'TRUE'
+
 cas_server.validate3:
   path: '/cas/p3/serviceValidate'
   defaults:
@@ -45,6 +83,7 @@ cas_server.validate3:
     validation_type: 3
   requirements:
     _access: 'TRUE'
+
 cas_server.proxy_validate3:
   path: '/cas/p3/proxyValidate'
   defaults:
@@ -52,6 +91,7 @@ cas_server.proxy_validate3:
     validation_type: 4
   requirements:
     _access: 'TRUE'
+
 cas_server.proxy:
   path: '/cas/proxy'
   defaults:
