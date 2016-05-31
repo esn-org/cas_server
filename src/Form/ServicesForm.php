@@ -51,21 +51,21 @@ class ServicesForm extends EntityForm {
     $status = $service->save();
 
     if ($status) {
-      drupal_set_message($this->t('Saved the %label Example.', array(
+      drupal_set_message($this->t('Saved the %label Service.', array(
         '%label' => $example->label(),
       )));
     }
     else {
-      drupal_set_message($this->t('The %label Example was not saved.', array(
+      drupal_set_message($this->t('The %label Service was not saved.', array(
         '%label' => $example->label(),
       )));
     }
 
-    $form_state->setRedirect('entity.example.collection');
+    $form_state->setRedirect('entity.cas_server_service.collection');
   }
 
   public function exist($id) {
-    $entity = $this->entityQuery->get('example')
+    $entity = $this->entityQuery->get('cas_server_service')
       ->condition('id', $id)
       ->execute();
     return (bool) $entity;
