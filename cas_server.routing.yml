@@ -17,7 +17,7 @@ entity.cas_server_service.collection:
 entity.cas_server_service.add_form:
   path: '/admin/config/people/cas_server/services/add'
   defaults:
-    _entity_form: 'entity.cas_server_service.add_form'
+    _entity_form: 'cas_server_service.add_form'
     _title: 'Add Service definition'
   requirements:
     _permission: 'administer site configuration'
@@ -25,7 +25,7 @@ entity.cas_server_service.add_form:
 entity.cas_server_service.edit_form:
   path: '/admin/config/people/cas_server/services/{cas_server_service}'
   defaults:
-    _entity_form: 'entity.cas_server_service.edit'
+    _entity_form: 'cas_server_service.edit'
     _title: 'Edit Service definition'
   requirements:
     _permission: 'administer site configuration'
