@@ -21,7 +21,7 @@ use Drupal\cas_server\CasServerServiceInterface;
  *     "form" = {
  *       "add" = "Drupal\cas_server\Form\ServicesForm",
  *       "edit" = "Drupal\cas_server\Form\ServicesForm",
- *       "delete" = Drupal\cas_server\Form\ServicesDeleteForm",
+ *       "delete" = "Drupal\cas_server\Form\ServicesDeleteForm",
  *     }
  *   },
  *   config_prefix = "cas_server_service",
