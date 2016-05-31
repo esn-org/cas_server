@@ -12,22 +12,33 @@ use Drupal\Core\Entity\EntityForm;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Entity\EntityFieldManager;
 
 class ServicesForm extends EntityForm {
 
   /**
+   * The entity field manager.
+   *
+   * @var \Drupal\Core\Entity\EntityFieldManager.
+   */
+  protected $entityFieldManager;
+
+  /**
    * @param \Drupal\Core\Entity\Query\QueryFactory $entity_query
    *   The entity query.
+   * @param \Drupal\Core\Entity\EntityFieldManager $entity_field_manager
+   *   The entity field manager.
    */
-  public function __construct(QueryFactory $entity_query) {
+  public function __construct(QueryFactory $entity_query, EntityFieldManager $entity_field_manager) {
     $this->entityQuery = $entity_query;
+    $this->entityFieldManager = $entity_field_manager;
   }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static($container->get('entity.query'));
+    return new static($container->get('entity.query'), $container->get('entity_field.manager'));
   }
 
   /**
