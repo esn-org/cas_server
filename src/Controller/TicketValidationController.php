@@ -484,7 +484,9 @@ class TicketValidationController implements ContainerInjectionInterface {
         $account = $this->userLoadByName($ticket->getUser());
         $response_text .= "<cas:attributes>\n";
         foreach ($attributes as $attr) {
-          $response_text .= "<cas:$attr>" . $account->get($attr) . "</cas:$attr>";
+          foreach($account->get($attr)->getValue() as $value) {
+            $response_text .= "<cas:$attr>" . $value['value'] . "</cas:$attr>";
+          }
         }
         $response_text .= "</cas:attributes>\n";
       }
@@ -526,7 +528,9 @@ class TicketValidationController implements ContainerInjectionInterface {
         $account = $this->userLoadByName($ticket->getUser());
         $response_text .= "<cas:attributes>\n";
         foreach ($attributes as $attr) {
-          $response_text .= "<cas:$attr>" . $account->get($attr) . "</cas:$attr>";
+          foreach ($account->get($attr)->getValue() as $value) {
+            $response_text .= "<cas:$attr>" . $value['value'] . "</cas:$attr>";
+          }
         }
         $response_text .= "</cas:attributes>\n";
       }
