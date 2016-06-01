@@ -51,7 +51,7 @@ Class ConfigHelper {
   public function __construct(ConfigFactoryInterface $config_factory, QueryFactory $entity_query, EntityManager $entity_manager) {
     $this->settings = $config_factory->get('cas_server.settings');
     $this->entityQuery = $entity_query;
-    $this->storage = $entity_manager->getStorage('cas_server_storage');
+    $this->storage = $entity_manager->getStorage('cas_server_service');
   }
 
   /**
