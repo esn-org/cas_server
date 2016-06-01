@@ -8,7 +8,7 @@
 namespace Drupal\cas_server\Configuration;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Entity\Query\QueryInterface;
+use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\cas_server\Entity\CasServerService;
 use Drupal\Core\Entity\EntityManager;
 
@@ -27,7 +27,7 @@ Class ConfigHelper {
   /**
    * Entity Query handler for service definitions.
    *
-   * @var \Drupal\Core\Entity\Query\QueryInterface
+   * @var \Drupal\Core\Entity\Query\QueryFactory
    */
   protected $entityQuery;
 
@@ -43,10 +43,12 @@ Class ConfigHelper {
    *
    * @param ConfigFactoryInterface $config_factory
    *   The configuration factory.
-   * @param QueryInterface $entity_query
+   * @param QueryFactory $entity_query
    *   The entity query handler.
+   * @param EntityManager $entity_manager
+   *   The entity manager.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, QueryInterface $entity_query, EntityManager $entity_manager) {
+  public function __construct(ConfigFactoryInterface $config_factory, QueryFactory $entity_query, EntityManager $entity_manager) {
     $this->settings = $config_factory->get('cas_server.settings');
     $this->entityQuery = $entity_query;
     $this->storage = $entity_manager->getStorage('cas_server_storage');
