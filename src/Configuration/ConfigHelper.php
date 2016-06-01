@@ -8,6 +8,9 @@
 namespace Drupal\cas_server\Configuration;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\Query\QueryInterface;
+use Drupal\cas_server\Entity\CasServerService;
+use Drupal\Core\Entity\EntityManager;
 
 /**
  * Class ConfigHelper
@@ -22,13 +25,31 @@ Class ConfigHelper {
   protected $settings;
 
   /**
+   * Entity Query handler for service definitions.
+   *
+   * @var \Drupal\Core\Entity\Query\QueryInterface
+   */
+  protected $entityQuery;
+
+  /**
+   * Service entity storage.
+   *
+   * @var \Drupal\Core\Entity\EntityStorageInterface
+   */
+  protected $storage;
+
+  /**
    * Constructor.
    *
    * @param ConfigFactoryInterface $config_factory
    *   The configuration factory.
+   * @param QueryInterface $entity_query
+   *   The entity query handler.
    */
-  public function __construct(ConfigFactoryInterface $config_factory) {
+  public function __construct(ConfigFactoryInterface $config_factory, QueryInterface $entity_query, EntityManager $entity_manager) {
     $this->settings = $config_factory->get('cas_server.settings');
+    $this->entityQuery = $entity_query;
+    $this->storage = $entity_manager->getStorage('cas_server_storage');
   }
 
   /**
@@ -41,8 +62,7 @@ Class ConfigHelper {
    *   Whether or not the service is allowed.
    */
   public function checkServiceAgainstWhitelist($service) {
-    //TODO
-    return TRUE;
+    return (bool)$this->matchServiceAgainstConfig($service);
   }
 
   /**
@@ -55,7 +75,9 @@ Class ConfigHelper {
    *   An array of user field names to be released as attributes.
    */
   public function getAttributesForService($service) {
-    //TODO
+    if ($def = $this->matchServiceAgainstConfig($service)) {
+      return array_keys($def->getAttributes());
+    }
     return [];
   }
 
@@ -108,8 +130,10 @@ Class ConfigHelper {
    *   Whether or not the service is authorized.
    */
   public function verifyServiceForSso($service) {
-    //TODO
-    return TRUE;
+    if ($def = $this->matchServiceAgainstConfig($service)) {
+      return $def->getSso();
+    }
+    return FALSE;
   }
 
   /**
@@ -146,6 +170,42 @@ Class ConfigHelper {
       return $m;
     }
     return FALSE;
+  }
+
+  /**
+   * Match a service string to a service definition.
+   *
+   * @param string $service
+   *   The provided service string.
+   *
+   * @return CasServerService | bool
+   *   A matching CasServerService object or FALSE if no match.
+   */
+  private function matchServiceAgainstConfig($service) {
+    $sids = $this->entityQuery('cas_server_service')
+      ->execute();
+    $service_definitions = $this->storage->loadMultiple($sids);
+    foreach ($service_definitions as $def) {
+      if ($this->matchServiceString($def->getService(), $service)) {
+        return $def;
+      }
+    }
+    return FALSE;
+  }
+
+  /**
+   * Match a string against a wildcard pattern.
+   *
+   * @param string $pattern
+   *   The string pattern to match against
+   * @param string $service
+   *   The string to try to match.
+   *
+   * @return bool
+   *   Whether the string matched or not.
+   */
+  private function matchServiceString($pattern, $service) {
+    return fnmatch($pattern, $service, FNM_CASEFOLD);
   }
 
 }
