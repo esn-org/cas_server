@@ -85,8 +85,8 @@ class ServicesForm extends EntityForm {
       '#options' => array(0 => $this->t('No'), 1 => $this->t('Yes')),
     );
 
-
-    $options = array_map(NULL, array_keys($this->entityFieldManager->getFieldDefinitions('user', 'user')));
+    $fields = array_keys($this->entityFieldManager->getFieldDefinitions('user', 'user'));
+    $options = array_combine($fields, $fields);
     $form['attributes'] = array(
       '#type' => 'select',
       '#title' => 'Released attributes',
