@@ -184,7 +184,7 @@ Class ConfigHelper {
    *   A matching CasServerService object or FALSE if no match.
    */
   private function matchServiceAgainstConfig($service) {
-    $sids = $this->entityQuery('cas_server_service')
+    $sids = $this->entityQuery->get('cas_server_service')
       ->execute();
     $service_definitions = $this->storage->loadMultiple($sids);
     foreach ($service_definitions as $def) {
