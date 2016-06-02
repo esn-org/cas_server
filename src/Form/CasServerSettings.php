@@ -48,8 +48,84 @@ class CasServerSettings extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    // @TODO
+    $config = $this->config('cas_server.settings');
 
+    $form['ticket'] = array(
+      '#type' => 'details',
+      '#title' => $this->t('Ticket timeouts'),
+      '#open' => TRUE,
+      '#tree' => TRUE,
+    );
+    $form['ticket']['service'] = array(
+      '#type' => 'textfield',
+      '#title' => $this->t('Service ticket timeout'),
+      '#description' => $this->t('Time in seconds for which a service ticket is valid.'),
+      '#size' => 30,
+      '#default_value' => $config->get('ticket.service_ticket_timeout'),
+    );
+    $form['ticket']['proxy'] = array(
+      '#type' => 'textfield',
+      '#title' => $this->t('Proxy ticket timeout'),
+      '#description' => $this->t('Time in seconds for which a proxy ticket is valid.'),
+      '#size' => 30,
+      '#default_value' => $config->get('ticket.proxy_ticket_timeout'),
+    );
+    $form['ticket']['proxy_granting'] = array(
+      '#type' => 'textfield',
+      '#title' => $this->t('Proxy granting ticket timeout'),
+      '#description' => $this->t('Time in seconds for which a proxy granting ticket is valid.'),
+      '#size' => 30,
+      '#default_value' => $config->get('ticket.proxy_granting_ticket_timeout');
+    );
+    $form['ticket']['ticket_granting'] = array(
+      '#type' => 'textfield',
+      '#title' => $this->t('Ticket granting ticket timeout'),
+      '#description' => $this->t('Time in seconds for which a ticket granting ticket is valid.'),
+      '#size' => 30,
+      '#default_value' => $config->get('ticket.ticket_granting_ticket_timeout');
+    );
+
+    $form['messages'] = array(
+      '#type' => 'details',
+      '#title' => 'Custom Messages',
+      '#open' => TRUE,
+      '#tree' => TRUE,
+    );
+    $form['messages']['invalid_service'] = array(
+      '#type' => 'textfield',
+      '#title' => $this->t('Display message for Invalid Service'),
+      '#description' => $this->t('Message to display to a user requesting an invalid service.'),
+      '#size' => 60,
+      '#default_value' => $config->get('messages.invalid_service'),
+    );
+    $form['messages']['user_logout'] = array(
+      '#type' => 'textfield',
+      '#title' => $this->t('Display message for User Logout'),
+      '#description' => $this->t('Message to display to a user logged out of single sign on.'),
+      '#size' => 60,
+      '#default_value' => $config->get('messages.user_logout'),
+    );
+    $form['messages']['logged_in'] = array(
+      '#type' => 'textfield',
+      '#title' => $this->t('Display message for Logged In Users'),
+      '#description' => $this->t('Message to display to a user already logged in to single sign on.'),
+      '#size' => 60,
+      '#default_value' => $config->get('messages.logged_in'),
+    );
+
+    $form['debugging'] = array(
+      '#type' => 'details',
+      '#title' => 'Debugging Options',
+      '#open' => FALSE,
+      '#tree' => TRUE,
+    );
+    $form['debugging']['log'] = array(
+      '#type' => 'radios',
+      '#title' => $this->t('Enable debugging log'),
+      '#description' => $this->t('Enable debugging output to the Drupal log service.'),
+      '#options' => [0 => 'No', 1 => 'Yes'],
+      '#default_value' => $config->get('debugging.log'),
+    );
 
     return parent::buildForm($form, $form_state);
   }
@@ -58,7 +134,13 @@ class CasServerSettings extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-    // @TODO
+    // Check timeouts to make sure they are integers
+    $values = $form_state->getValue('ticket');
+    foreach ($values as $key => $value) {
+      if (!is_numeric($value) || !is_int((float)$value)) {
+        $form_state->setErrorByName("ticket][$key");
+      }
+    }
     
     return parent::validateForm($form, $form_state);
   }
@@ -67,7 +149,22 @@ class CasServerSettings extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    // @TODO
+    $config = $this->config('cas_server.settings');
+    $ticket_data = $form_state->getValue('ticket');
+    $config
+      ->set('ticket.service_ticket_timeout', (int)$ticket_data['service'])
+      ->set('ticket.proxy_ticket_timeout', (int)$ticket_data['proxy'])
+      ->set('ticket.proxy_granting_ticket_timeout', (int)$ticket_data['proxy_granting'])
+      ->set('ticket.ticket_granting_ticket_timeout', (int)$ticket_data['ticket_granting']);
+
+    $message_data = $form_state->getValue('messages');
+    $config
+      ->set('messages.invalid_service', $message_data['invalid_service'])
+      ->set('messages.user_logout', $message_data['user_logout'])
+      ->set('messages.logged_in', $message_data['logged_in']);
+
+    $config->set('debugging.log', $form_state->getValue(['debugging', 'log']));
+    $config->save();
 
     parent::submitForm($form, $form_state);
   }
