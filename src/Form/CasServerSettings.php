@@ -82,7 +82,7 @@ class CasServerSettings extends ConfigFormBase {
       '#title' => $this->t('Ticket granting ticket timeout'),
       '#description' => $this->t('Time in seconds for which a ticket granting ticket is valid.'),
       '#size' => 30,
-      '#default_value' => $config->get('ticket.ticket_granting_ticket_timeout');
+      '#default_value' => $config->get('ticket.ticket_granting_ticket_timeout'),
     );
 
     $form['messages'] = array(
