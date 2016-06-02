@@ -75,7 +75,7 @@ class CasServerSettings extends ConfigFormBase {
       '#title' => $this->t('Proxy granting ticket timeout'),
       '#description' => $this->t('Time in seconds for which a proxy granting ticket is valid.'),
       '#size' => 30,
-      '#default_value' => $config->get('ticket.proxy_granting_ticket_timeout');
+      '#default_value' => $config->get('ticket.proxy_granting_ticket_timeout'),
     );
     $form['ticket']['ticket_granting'] = array(
       '#type' => 'textfield',
