@@ -137,8 +137,8 @@ class CasServerSettings extends ConfigFormBase {
     // Check timeouts to make sure they are integers
     $values = $form_state->getValue('ticket');
     foreach ($values as $key => $value) {
-      if (!is_numeric($value) || !is_int((float)$value)) {
-        $form_state->setErrorByName("ticket][$key");
+      if (!is_numeric($value) || !(round($value) == $value)) {
+        $form_state->setErrorByName("ticket][$key", $this->t('Ticket timeouts must be integer-valued'));
       }
     }
     
@@ -163,7 +163,7 @@ class CasServerSettings extends ConfigFormBase {
       ->set('messages.user_logout', $message_data['user_logout'])
       ->set('messages.logged_in', $message_data['logged_in']);
 
-    $config->set('debugging.log', $form_state->getValue(['debugging', 'log']));
+    $config->set('debugging.log', (bool)$form_state->getValue(['debugging', 'log']));
     $config->save();
 
     parent::submitForm($form, $form_state);
