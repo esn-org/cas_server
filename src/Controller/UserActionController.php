@@ -8,7 +8,7 @@
 namespace Drupal\cas_server\Controller;
 
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
-use Drupal\Core\Routing\TrustedRedirectResponse;
+use Drupal\cas_server\RedirectResponse;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Drupal\Core\Session\AccountProxyInterface;
@@ -127,7 +127,7 @@ class UserActionController implements ContainerInjectionInterface {
     // need to be redirected back to the service.
     if ($request->query->has('ticket')) {
       $url = Url::fromUri($service, ['query' => ['ticket' => $request->query->get('ticket')]]);
-      return TrustedRedirectResponse::create($url->toString(), 302);
+      return RedirectResponse::create($url->toString(), 302);
     }
 
     if ($request->query->has('gateway')) {
@@ -176,13 +176,13 @@ class UserActionController implements ContainerInjectionInterface {
     if (!$renew && $this->userHasSingleSignOnSession($service)) {
       $st = $this->ticketFactory->createServiceTicket($service, FALSE);
       $url = Url::fromUri($service, ['query' => ['ticket' => $st->getId()]]);
-      return TrustedRedirectResponse::create($url->toString(), 302);
+      return RedirectResponse::create($url->toString(), 302);
     }
     
     // If gateway is set and user is not logged in, redirect them back to
     // service.
     if ($gateway && !$this->userHasSingleSignOnSession($service)) {
-      return TrustedRedirectResponse::create($service, 302);
+      return RedirectResponse::create($service, 302);
     }
 
     // Present the user with a login form.
