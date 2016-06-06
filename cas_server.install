@@ -22,7 +22,8 @@ function cas_server_schema() {
       ),
       'expiration' => array(
         'description' => 'Time after which the ticket is invalid.',
-        'type' => 'datetime',
+        'type' => 'int',
+        'mysql_type' => 'datetime',
         'not null' => TRUE,
       ),
       'type' => array(
