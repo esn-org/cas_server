@@ -112,7 +112,7 @@ class DatabaseTicketStorage implements TicketStorageInterface {
         return new ServiceTicket($result->id, strtotime($result->expiration), $result->session, $result->user, $result->service, $result->renew);
       }
       else if ($result->type == 'proxy') {
-        return new ProxyTicket($result->id, strtotime($result->expiration), $result->session, $result->user, $result->session, $result->renew, unserialize($result->proxy_chain));
+        return new ProxyTicket($result->id, strtotime($result->expiration), $result->session, $result->user, $result->service, $result->renew, unserialize($result->proxy_chain));
       }
       else {
         throw new TicketTypeException('Expected ticket of type service or proxy; found ticket of type ' . $result->type);
