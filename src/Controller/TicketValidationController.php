@@ -569,7 +569,7 @@ class TicketValidationController implements ContainerInjectionInterface {
    * @return string|bool
    *   A pgtIou string to pass along in the response, or FALSE on failure.
    */
-  private function proxyCallback($pgtUrl, Ticket $ticket) {
+  protected function proxyCallback($pgtUrl, Ticket $ticket) {
     $url = urldecode($pgtUrl);
     if (parse_url($url, PHP_URL_SCHEME) !== 'https') {
       return FALSE;
@@ -583,7 +583,9 @@ class TicketValidationController implements ContainerInjectionInterface {
     }
     // Order a proxy granting ticket.
     if ($ticket instanceof ProxyTicket) {
-      $proxy_chain = array_reverse(array_push(array_reverse($ticket->getProxyChain()), $url));
+      $chain = array_reverse($ticket->getProxyChain());
+      array_push($chain, $url);
+      $proxy_chain = array_reverse($chain);
     }
     else {
       $proxy_chain = [$url];
