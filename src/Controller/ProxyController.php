@@ -128,7 +128,7 @@ class ProxyController implements ContainerInjectionInterface {
       }
 
       $chain = $ticket->getProxyChain();
-      $pt = $this->ticketFactory->createProxyTicket($service, FALSE, $chain);
+      $pt = $this->ticketFactory->createProxyTicket($service, FALSE, $chain, $ticket->getSession(), $ticket->getUser());
 
       return $this->generateProxySuccessRequestResponse($format, $pt->getId());
 
@@ -227,7 +227,7 @@ class ProxyController implements ContainerInjectionInterface {
    */
   private function generateInvalidProxyRequestResponse($format) {
     if ($format == 'xml') {
-      $response_text = "<cas:serviceReponse xmlns:cas='http://www.yale.edu/tp/cas'>
+      $response_text = "<cas:serviceResponse xmlns:cas='http://www.yale.edu/tp/cas'>
         <cas:proxyFailure code='INVALID_REQUEST'>
           'pgt' and 'targetService' parameters are both required
         </cas:proxyFailure>
