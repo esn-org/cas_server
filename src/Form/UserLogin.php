@@ -106,6 +106,9 @@ class UserLogin extends FormBase {
     if ($form_state->getValue('lt') != $this->tempStore->get('lt')) {
       $form_state->setErrorByName('lt', $this->t('Login ticket invalid. Please try again.'));
     }
+    if (!$this->authService->authenticate($username, $password)) {
+      $form_state->setErrorByName('username', $this->t('Bad username/password combination given.'));
+    }
   }
 
   /**
