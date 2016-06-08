@@ -17,6 +17,7 @@ use Drupal\Component\Utility\Crypt;
 use Drupal\cas_server\Ticket\TicketFactory;
 use Drupal\cas_server\Configuration\ConfigHelper;
 use Drupal\Core\Url;
+use Drupal\user\PrivateTempStoreFactory;
 
 /**
  * Class UserLogin.
@@ -34,11 +35,14 @@ class UserLogin extends FormBase {
    *   The ticket factory.
    * @param ConfigHelper $config_helper
    *   The configuration helper.
+   * @param PrivateTempStoreFactory $temp_store
+   *   The user temporary storage factory.
    */
-  public function __construct(UserAuthInterface $user_auth, TicketFactory $ticket_factory, ConfigHelper $config_helper) {
+  public function __construct(UserAuthInterface $user_auth, TicketFactory $ticket_factory, ConfigHelper $config_helper, PrivateTempStoreFactory $temp_store) {
     $this->authService = $user_auth;
     $this->ticketFactory = $ticket_factory;
     $this->configHelper = $config_helper;
+    $this->tempStore = $temp_store->get('cas_server');
   }
 
   /**
@@ -75,7 +79,7 @@ class UserLogin extends FormBase {
     );
 
     $lt = 'LT-' . Crypt::randomBytesBase64(32);
-    $_SESSION['cas_lt'] = $lt;
+    $this->tempStore->set('lt', $lt);
 
     $form['lt'] = array(
       '#type' => 'hidden',
@@ -99,7 +103,7 @@ class UserLogin extends FormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-    if ($form_state->getValue('lt') != $_SESSION['cas_lt']) {
+    if ($form_state->getValue('lt') != $this->tempStore->get('lt')) {
       $form_state->setErrorByName('lt', $this->t('Login ticket invalid. Please try again.'));
     }
   }
