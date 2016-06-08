@@ -215,7 +215,7 @@ class UserActionController implements ContainerInjectionInterface {
    * @return bool
    */
   private function userHasSingleSignOnSession($service) {
-    if (!$this->configHelper->verifyServiceForSso($service)) {
+    if (!is_null($service) && !$this->configHelper->verifyServiceForSso($service)) {
       return FALSE;
     }
 
