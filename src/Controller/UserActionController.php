@@ -125,7 +125,7 @@ class UserActionController implements ContainerInjectionInterface {
 
     // If we have a ticket, it is because we've already processed the form and
     // need to be redirected back to the service.
-    if ($request->query->has('ticket')) {
+    if ($request->query->has('ticket') && $this->configHelper->checkServiceAgainstWhitelist($service)) {
       $url = Url::fromUri($service, ['query' => ['ticket' => $request->query->get('ticket')]]);
       return RedirectResponse::create($url->toString(), 302);
     }
