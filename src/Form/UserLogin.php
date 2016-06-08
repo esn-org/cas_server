@@ -49,7 +49,7 @@ class UserLogin extends FormBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static($container->get('user.auth'), $container->get('cas_server.ticket_factory'), $container->get('cas_server.config_helper'));
+    return new static($container->get('user.auth'), $container->get('cas_server.ticket_factory'), $container->get('cas_server.config_helper'), $container->get('user.private_tempstore'));
   }
 
   /**
