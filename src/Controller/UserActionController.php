@@ -21,6 +21,7 @@ use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Session\SessionManagerInterface;
 use Drupal\Component\Utility\Crypt;
+use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 
 /**
  * Class UserActionController.
@@ -79,6 +80,13 @@ class UserActionController implements ContainerInjectionInterface {
   protected $sessionManager;
 
   /**
+   * The page cache kill switch.
+   *
+   * @var KillSwitch
+   */
+  protected $killSwitch;
+
+  /**
    * Constructor.
    *
    * @param RequestStack $request_stack
@@ -97,8 +105,10 @@ class UserActionController implements ContainerInjectionInterface {
    *   The string translation service.
    * @param SessionManagerInterface $session_manager
    *   The session manager.
+   * @param KillSwitch $kill_switch
+   *   The page cache kill switch.
    */
-  public function __construct(RequestStack $request_stack, AccountProxyInterface $user, ConfigHelper $config_helper, TicketFactory $ticket_factory, TicketStorageInterface $ticket_store, DebugLogger $debug_logger, TranslationInterface $translation, SessionManagerInterface $session_manager) {
+  public function __construct(RequestStack $request_stack, AccountProxyInterface $user, ConfigHelper $config_helper, TicketFactory $ticket_factory, TicketStorageInterface $ticket_store, DebugLogger $debug_logger, TranslationInterface $translation, SessionManagerInterface $session_manager, KillSwitch $kill_switch) {
     $this->requestStack = $request_stack;
     $this->account = $user;
     $this->configHelper = $config_helper;
@@ -107,19 +117,21 @@ class UserActionController implements ContainerInjectionInterface {
     $this->logger = $debug_logger;
     $this->stringTranslation = $translation;
     $this->sessionManager = $session_manager;
+    $this->killSwitch = $kill_switch;
   }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static($container->get('request_stack'), $container->get('current_user'), $container->get('cas_server.config_helper'), $container->get('cas_server.ticket_factory'), $container->get('cas_server.storage'), $container->get('cas_server.logger'), $container->get('string_translation'), $container->get('session_manager'));
+    return new static($container->get('request_stack'), $container->get('current_user'), $container->get('cas_server.config_helper'), $container->get('cas_server.ticket_factory'), $container->get('cas_server.storage'), $container->get('cas_server.logger'), $container->get('string_translation'), $container->get('session_manager'), $container->get('page_cache_kill_switch'));
   }
 
   /**
    * Handles a page request for /cas/login.
    */
   public function login() {
+    $this->killSwitch->trigger();
     $request = $this->requestStack->getCurrentRequest();
     $service = $request->query->has('service') ? urldecode($request->query->get('service')) : NULL;
 
@@ -194,6 +206,7 @@ class UserActionController implements ContainerInjectionInterface {
    * Handles a page request for /cas/logout.
    */
   public function logout() {
+    $this->killSwitch->trigger();
     if (isset($_COOKIE['cas_tgc'])) {
       unset($_COOKIE['cas_tgc']);
       setcookie('cas_tgc', '', REQUEST_TIME - 3600, '/cas');
