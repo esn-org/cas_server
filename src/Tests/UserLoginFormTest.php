@@ -26,6 +26,7 @@ class UserLoginFormTest extends WebTestBase {
     $this->ticketStore = $this->container->get('cas_server.storage');
     $this->connection = $this->container->get('database');
     $this->tempStoreFactory = $this->container->get('user.private_tempstore');
+    $this->entityStorage = $this->container->get('entity_type.manager')->getStorage('cas_server_service');
 
     $test = CasServerService::create([
       'id' => 'test',
@@ -75,25 +76,20 @@ class UserLoginFormTest extends WebTestBase {
    * Test submitting without a valid login ticket.
    */
   public function testInvalidLoginTicket() {
-    /*$this->drupalGet('cas/login');
-    var_dump($this->cookies);
-    // Drupal protects hidden form values by default, so we need to manually
-    // corrupt the remembered lt to test. In real-life cases, only a session
-    // timeout while on the login form will cause this to occur.
-    $temp_store = $this->tempStoreFactory->get('cas_server', $this->sessionId);
-    $temp_store->set('lt', 'bar');
+    // We want to cause the session lt to no longer be valid.
+    $this->drupalGet('cas/login');
+    $this->curlClose();
+    $this->curlInitialize();
     $edit = [
       'username' => $this->exampleUser->getAccountName(),
       'password' => $this->exampleUser->pass_raw,
-      'lt' => 'foo',
-      'service' => '',
     ];
     $this->drupalPostForm(NULL, $edit, t('Submit'));
 
     $this->assertResponse(200);
     $this->assertTrue(empty($this->cookies['cas_tgc']));
     $this->assertText('Login ticket invalid. Please try again');
-    */
+    
   }
 
 
@@ -111,6 +107,39 @@ class UserLoginFormTest extends WebTestBase {
     $this->drupalPostForm(NULL, $edit, t('Submit'));
 
     $this->assertTrue(!empty($this->cookies['cas_tgc']));
+    $this->assertResponse(200);
+    $this->assertEqual($this->redirectCount, 2);
+
+    $ticket = $this->connection->select('cas_server_ticket_store', 'c')
+      ->fields('c', array('id'))
+      ->condition('session', Crypt::hashBase64($this->sessionId))
+      ->condition('type', 'service')
+      ->execute()
+      ->fetch();
+    $tid = $ticket->id;
+
+    $this->assertUrl('cas/validate', ['query' => ['ticket' => $tid]]);
+
+  }
+
+  /**
+   * Test submitting with correct values and a service not configured for SSO.
+   */
+  public function testCorrectWithServiceNoSso() {
+    $test = $this->entityStorage->load('test');
+    $test->setSso(FALSE);
+    $test->save();
+    
+    $service = Url::fromRoute('cas_server.validate1');
+    $service->setAbsolute();
+    $this->drupalGet('cas/login', ['query' => ['service' => $service->toString()]]);
+    $edit = [
+      'username' => $this->exampleUser->getAccountName(),
+      'password' => $this->exampleUser->pass_raw,
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Submit'));
+
+    $this->assertTrue(empty($this->cookies['cas_tgc']));
     $this->assertResponse(200);
     $this->assertEqual($this->redirectCount, 2);
 
