@@ -40,7 +40,7 @@ class DatabaseTicketStorage implements TicketStorageInterface {
     $this->connection->insert('cas_server_ticket_store')
       ->fields(
         array('id', 'expiration', 'type', 'session', 'user', 'service', 'renew'),
-        array($ticket->getId(), date('Y-m-d H:i:s', $ticket->getExpirationTime()), 'service', $ticket->getSession(), $ticket->getUser(), $ticket->getService(), $ticket->getRenew())
+        array($ticket->getId(), date('Y-m-d H:i:s', $ticket->getExpirationTime()), 'service', $ticket->getSession(), $ticket->getUser(), $ticket->getService(), $ticket->getRenew() ? 1: 0)
       )
       ->execute();
   }
@@ -93,7 +93,7 @@ class DatabaseTicketStorage implements TicketStorageInterface {
     $this->connection->insert('cas_server_ticket_store')
       ->fields(
         array('id', 'expiration', 'type', 'session', 'user', 'service', 'renew', 'proxy_chain'),
-        array($ticket->getId(), date('Y-m-d H:i:s', $ticket->getExpirationTime()), 'proxy', $ticket->getSession(), $ticket->getUser(), $ticket->getService(), $ticket->getRenew(), serialize($ticket->getProxyChain()))
+        array($ticket->getId(), date('Y-m-d H:i:s', $ticket->getExpirationTime()), 'proxy', $ticket->getSession(), $ticket->getUser(), $ticket->getService(), $ticket->getRenew() ? 1 : 0, serialize($ticket->getProxyChain()))
       )
       ->execute();
   }
