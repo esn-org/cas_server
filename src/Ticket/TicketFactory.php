@@ -7,9 +7,11 @@
 
 namespace Drupal\cas_server\Ticket;
 
+use Drupal\cas_server\Event\CasServerTicketAlterEvent;
 use Drupal\Component\Utility\Crypt;
 use Drupal\cas_server\Configuration\ConfigHelper;
 use Drupal\Core\Session\SessionManagerInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 
 class TicketFactory {
@@ -36,6 +38,13 @@ class TicketFactory {
   protected $sessionManager;
 
   /**
+   * Event dispatcher.
+   *
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
+   */
+  protected $eventDispatcher;
+
+  /**
    * Constructor.
    *
    * @param TicketStorageInterface $ticket_store
@@ -43,10 +52,11 @@ class TicketFactory {
    * @param ConfigHelper $config_helper
    *   The configuration helper.
    */
-  public function __construct(TicketStorageInterface $ticket_store, ConfigHelper $config_helper, SessionManagerInterface $session_manager) {
+  public function __construct(TicketStorageInterface $ticket_store, ConfigHelper $config_helper, SessionManagerInterface $session_manager, EventDispatcherInterface $event_dispatcher) {
     $this->ticketStore = $ticket_store;
     $this->configHelper = $config_helper;
     $this->sessionManager = $session_manager;
+    $this->eventDispatcher = $event_dispatcher;
   }
 
   /**
@@ -67,6 +77,8 @@ class TicketFactory {
     $name = \Drupal::currentUser()->getAccountName();
 
     $pgt = new ProxyGrantingTicket($id, $expiration_time, $session, $uid, $name, $proxy_chain);
+    $event = new CasServerTicketAlterEvent($pgt);
+    $this->eventDispatcher->dispatch(CasServerTicketAlterEvent::CAS_SERVER_TICKET_ALTER_EVENT, $event);
     $this->ticketStore->storeProxyGrantingTicket($pgt);
 
     return $pgt;
@@ -93,6 +105,8 @@ class TicketFactory {
     $name = \Drupal::currentUser()->getAccountName();
 
     $st = new ServiceTicket($id, $expiration_time, $session, $uid, $name, $service_string, $renew);
+    $event = new CasServerTicketAlterEvent($st);
+    $this->eventDispatcher->dispatch(CasServerTicketAlterEvent::CAS_SERVER_TICKET_ALTER_EVENT, $event);
     $this->ticketStore->storeServiceTicket($st);
 
     return $st;
@@ -123,6 +137,8 @@ class TicketFactory {
     $expiration_time = REQUEST_TIME + $this->configHelper->getProxyTicketTimeout();
 
     $pt = new ProxyTicket($id, $expiration_time, $session, $uid, $name, $service_string, $renew, $proxy_chain);
+    $event = new CasServerTicketAlterEvent($pt);
+    $this->eventDispatcher->dispatch(CasServerTicketAlterEvent::CAS_SERVER_TICKET_ALTER_EVENT, $event);
     $this->ticketStore->storeProxyTicket($pt);
 
     return $pt;
@@ -143,10 +159,11 @@ class TicketFactory {
     $name = \Drupal::currentUser()->getAccountName();
 
     $tgt = new TicketGrantingTicket($id, $expiration_time, $session, $uid, $name);
+    $event = new CasServerTicketAlterEvent($tgt);
+    $this->eventDispatcher->dispatch(CasServerTicketAlterEvent::CAS_SERVER_TICKET_ALTER_EVENT, $event);
     $this->ticketStore->storeTicketGrantingTicket($tgt);
 
     return $tgt;
   }
-
 
 }

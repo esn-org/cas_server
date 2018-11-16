@@ -85,6 +85,16 @@ abstract class Ticket {
   }
 
   /**
+   * Set the username for this ticket.
+   *
+   * @param string $username
+   *   The username to be set.
+   */
+  public function setUser($username) {
+    $this->user = $username;
+  }
+
+  /**
    * Return the id of the ticket.
    *
    * @return string
