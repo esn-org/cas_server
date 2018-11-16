@@ -26,6 +26,12 @@ function cas_server_schema() {
         'mysql_type' => 'datetime',
         'not null' => TRUE,
       ),
+      'uid' => array(
+        'description' => 'The user that this ticket is for.',
+        'type' => 'int',
+        'not null' => FALSE,
+        'default' => 0,
+      ),
       'type' => array(
         'description' => 'A machine identifier for the type of ticket.',
         'type' => 'varchar',
@@ -71,4 +77,18 @@ function cas_server_schema() {
   );
 
   return $schema;
+}
+
+/**
+ * Add the uid to the ticket table.
+ */
+function cas_server_update_8001() {
+  if (!\Drupal::database()->schema()->fieldExists('cas_server_ticket_store', 'uid')) {
+    \Drupal::database()->schema()->addField('cas_server_ticket_store', 'uid', array(
+      'description' => 'The user that this ticket is for.',
+      'type' => 'int',
+      'not null' => FALSE,
+      'default' => 0,
+    ));
+  }
 }

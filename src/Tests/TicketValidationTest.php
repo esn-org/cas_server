@@ -181,14 +181,14 @@ class TicketValidationTest extends WebTestBase {
     $service = 'https://example.com';
     
     // Protocol version 2
-    $st = $this->ticketFactory->createProxyTicket($service, FALSE, [], 'foo', $this->exampleUser->getUsername());
+    $st = $this->ticketFactory->createProxyTicket($service, FALSE, [], 'foo', $this->exampleUser->id(), $this->exampleUser->getUsername());
     $this->drupalGet('cas/proxyValidate', ['query' => ['service' => $service, 'ticket' => $st->getId()]]);   
     $this->assertRaw('<cas:authenticationSuccess>');
     $this->assertRaw('<cas:user>' . $this->exampleUser->getUsername() . '</cas:user>');
     $this->assertResponse(200);
 
     // Protocol version 3
-    $st = $this->ticketFactory->createProxyTicket($service, FALSE, [], 'foo', $this->exampleUser->getUsername());
+    $st = $this->ticketFactory->createProxyTicket($service, FALSE, [], 'foo', $this->exampleUser->id(), $this->exampleUser->getUsername());
     $this->drupalGet('cas/p3/proxyValidate', ['query' => ['service' => $service, 'ticket' => $st->getId()]]);      
     $this->assertRaw('<cas:authenticationSuccess');
     $this->assertRaw('<cas:user>' . $this->exampleUser->getUsername() . '</cas:user>');   
@@ -206,13 +206,13 @@ class TicketValidationTest extends WebTestBase {
     $service = 'https://example.com';
     
     // Protocol version 2
-    $st = $this->ticketFactory->createProxyTicket($service, FALSE, [], 'foo', $this->exampleUser->getUsername());
+    $st = $this->ticketFactory->createProxyTicket($service, FALSE, [], 'foo', $this->exampleUser->id(), $this->exampleUser->getUsername());
     $this->drupalGet('cas/serviceValidate', ['query' => ['service' => $service, 'ticket' => $st->getId()]]);   
     $this->assertRaw('<cas:authenticationFailure code="INVALID_TICKET_SPEC">');
     $this->assertResponse(200);
 
     // Protocol version 3
-    $st = $this->ticketFactory->createProxyTicket($service, FALSE, [], 'foo', $this->exampleUser->getUsername());
+    $st = $this->ticketFactory->createProxyTicket($service, FALSE, [], 'foo', $this->exampleUser->id(), $this->exampleUser->getUsername());
     $this->drupalGet('cas/p3/serviceValidate', ['query' => ['service' => $service, 'ticket' => $st->getId()]]);      
     $this->assertRaw('<cas:authenticationFailure code="INVALID_TICKET_SPEC">');
     $this->assertResponse(200);

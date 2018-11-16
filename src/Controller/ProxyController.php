@@ -128,7 +128,7 @@ class ProxyController implements ContainerInjectionInterface {
       }
 
       $chain = $ticket->getProxyChain();
-      $pt = $this->ticketFactory->createProxyTicket($service, FALSE, $chain, $ticket->getSession(), $ticket->getUser());
+      $pt = $this->ticketFactory->createProxyTicket($service, FALSE, $chain, $ticket->getSession(), $ticket->getUid(), $ticket->getUser());
 
       return $this->generateProxySuccessRequestResponse($format, $pt->getId());
 

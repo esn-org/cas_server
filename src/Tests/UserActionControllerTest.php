@@ -45,8 +45,8 @@ class UserActionControllerTest extends WebTestBase {
     $this->curlCookies[] = 'cas_tgc=foo';
 
     // Proxy tickets take session ids in the constructor, so use those to test
-    $this->ticketFactory->createProxyTicket('foo', FALSE, [], $session_id, 'bar');
-    $this->ticketFactory->createProxyTicket('baz', FALSE, [], $session_id, 'quux');
+    $this->ticketFactory->createProxyTicket('foo', FALSE, [], $session_id, 0, 'bar');
+    $this->ticketFactory->createProxyTicket('baz', FALSE, [], $session_id, 0, 'quux');
 
     $this->drupalGet('cas/logout');
     $this->assertFalse($this->drupalUserIsLoggedIn($this->exampleUser));

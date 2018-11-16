@@ -31,6 +31,13 @@ abstract class Ticket {
   protected $session;
 
   /**
+   * @var int
+   *
+   * The uid of the user who requested the ticket.
+   */
+  protected $uid;
+
+  /**
    * @var string
    *
    * The username of the user who requested the ticket.
@@ -49,11 +56,22 @@ abstract class Ticket {
    * @param string $username
    *   The username of requestor.
    */
-  public function __construct($ticket_id, $timestamp, $session_id, $username) {
+  public function __construct($ticket_id, $timestamp, $session_id, $uid, $username) {
     $this->id = $ticket_id;
     $this->expirationTime = $timestamp;
     $this->session = $session_id;
+    $this->uid = $uid;
     $this->user = $username;
+  }
+
+  /**
+   * Return the user.
+   *
+   * @return string
+   *   The user property.
+   */
+  public function getUid() {
+    return $this->uid;
   }
 
   /**

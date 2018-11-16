@@ -8,6 +8,7 @@
 namespace Drupal\cas_server\Controller;
 
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -107,7 +108,15 @@ class TicketValidationController implements ContainerInjectionInterface {
    */
   protected $ticketFactory;
 
+  /**
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
+   */
   protected $eventDispatcher;
+
+  /**
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
 
   /**
    * Constructor.
@@ -125,21 +134,22 @@ class TicketValidationController implements ContainerInjectionInterface {
    * @param TicketFactory $ticket_factory
    *   The CAS ticket factory.
    */
-  public function __construct(RequestStack $request_stack, TicketStorageInterface $ticket_store, DebugLogger $debug_logger, ConfigHelper $config_helper, Client $http_client, TicketFactory $ticket_factory, EventDispatcherInterface $eventDispatcher) {
+  public function __construct(RequestStack $request_stack, TicketStorageInterface $ticket_store, DebugLogger $debug_logger, ConfigHelper $config_helper, Client $http_client, TicketFactory $ticket_factory, EventDispatcherInterface $event_dispatcher, EntityTypeManagerInterface $entity_manager) {
     $this->requestStack = $request_stack;
     $this->ticketStore = $ticket_store;
     $this->logger = $debug_logger;
     $this->configHelper = $config_helper;
     $this->httpClient = $http_client;
     $this->ticketFactory = $ticket_factory;
-    $this->eventDispatcher = $eventDispatcher;
+    $this->eventDispatcher = $event_dispatcher;
+    $this->entityTypeManager = $entity_manager;
   }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static($container->get('request_stack'), $container->get('cas_server.storage'), $container->get('cas_server.logger'), $container->get('cas_server.config_helper'), $container->get('http_client'), $container->get('cas_server.ticket_factory'), $container->get('event_dispatcher'));
+    return new static($container->get('request_stack'), $container->get('cas_server.storage'), $container->get('cas_server.logger'), $container->get('cas_server.config_helper'), $container->get('http_client'), $container->get('cas_server.ticket_factory'), $container->get('event_dispatcher'), $container->get('entity.manager'));
   }
 
   /**
@@ -486,7 +496,7 @@ class TicketValidationController implements ContainerInjectionInterface {
     if ($validation_type == self::CAS_PROTOCOL_1) {
       return $this->generateVersion1Success($ticket);
     }
-    $account = $this->userLoadByName($ticket->getUser());
+    $account = $this->loadUser($ticket->getUid());
 
     $event = new CASAttributesAlterEvent($account, $ticket);
 
@@ -541,7 +551,7 @@ class TicketValidationController implements ContainerInjectionInterface {
   private function generateProxyTicketValidationSuccess($format, $ticket, $pgtIou) {
     $attributes = $this->configHelper->getAttributesForService($ticket->getService());
 
-    $account = $this->userLoadByName($ticket->getUser());
+    $account = $this->loadUser($ticket->getUid());
     $event = new CASAttributesAlterEvent($account, $ticket);
     $this->eventDispatcher->dispatch(CASAttributesAlterEvent::CAS_ATTRIBUTES_ALTER_EVENT, $event);
 
@@ -659,16 +669,16 @@ class TicketValidationController implements ContainerInjectionInterface {
   }
 
   /**
-   * Encapsulates user_load_by_name.
+   * Load a user by uid.
    *
-   * @param string $username
-   *   The username to load.
+   * @param string $uid
+   *   The uid to load.
    *
    * @return \Drupal\user\Entity\User
    *   The user object.
    */
-  private function userLoadByName($username) {
-    return user_load_by_name($username);
+  private function loadUser($uid) {
+    return $this->entityTypeManager->getStorage('user')->load($uid);
   }
 
 }

@@ -63,9 +63,10 @@ class TicketFactory {
     $id .= Crypt::randomBytesBase64(32);
     $expiration_time = REQUEST_TIME + $this->configHelper->getProxyGrantingTicketTimeout();
     $session = Crypt::hashBase64($this->sessionManager->getId());
-    $name = \Drupal::currentUser()->getUsername();
+    $uid = \Drupal::currentUser()->id();
+    $name = \Drupal::currentUser()->getAccountName();
 
-    $pgt = new ProxyGrantingTicket($id, $expiration_time, $session, $name, $proxy_chain);
+    $pgt = new ProxyGrantingTicket($id, $expiration_time, $session, $uid, $name, $proxy_chain);
     $this->ticketStore->storeProxyGrantingTicket($pgt);
 
     return $pgt;
@@ -88,9 +89,10 @@ class TicketFactory {
     $id .= Crypt::randomBytesBase64(32);
     $expiration_time = REQUEST_TIME + $this->configHelper->getServiceTicketTimeout();
     $session = Crypt::hashBase64($this->sessionManager->getId());
-    $name = \Drupal::currentUser()->getUsername();
+    $uid = \Drupal::currentUser()->id();
+    $name = \Drupal::currentUser()->getAccountName();
 
-    $st = new ServiceTicket($id, $expiration_time, $session, $name, $service_string, $renew);
+    $st = new ServiceTicket($id, $expiration_time, $session, $uid, $name, $service_string, $renew);
     $this->ticketStore->storeServiceTicket($st);
 
     return $st;
@@ -107,18 +109,20 @@ class TicketFactory {
    *   The proxy chain.
    * @param string $session
    *   The session ID of the session who originally requested the requesting pgt.
+   * @param int $uid
+   *   The uid of the of user who originally requested the pgt.
    * @param string $name
    *   The username of the user who originally requested the requesting pgt.
    *
    * @return ProxyTicket
    *   The created and saved ProxyTicket.
    */
-  public function createProxyTicket($service_string, $renew, $proxy_chain, $session, $name) {
+  public function createProxyTicket($service_string, $renew, $proxy_chain, $session, $uid, $name) {
     $id = 'PT-';
     $id .= Crypt::randomBytesBase64(32);
     $expiration_time = REQUEST_TIME + $this->configHelper->getProxyTicketTimeout();
 
-    $pt = new ProxyTicket($id, $expiration_time, $session, $name, $service_string, $renew, $proxy_chain);
+    $pt = new ProxyTicket($id, $expiration_time, $session, $uid, $name, $service_string, $renew, $proxy_chain);
     $this->ticketStore->storeProxyTicket($pt);
 
     return $pt;
@@ -135,9 +139,10 @@ class TicketFactory {
     $id .= Crypt::randomBytesBase64(32);
     $expiration_time = REQUEST_TIME + $this->configHelper->getTicketGrantingTicketTimeout();
     $session = Crypt::hashBase64($this->sessionManager->getId());
-    $name = \Drupal::currentUser()->getUsername();
+    $uid = \Drupal::currentUser()->id();
+    $name = \Drupal::currentUser()->getAccountName();
 
-    $tgt = new TicketGrantingTicket($id, $expiration_time, $session, $name);
+    $tgt = new TicketGrantingTicket($id, $expiration_time, $session, $uid, $name);
     $this->ticketStore->storeTicketGrantingTicket($tgt);
 
     return $tgt;

@@ -25,6 +25,8 @@ class ProxyTicket extends ServiceTicket {
    *   A unix timestamp describing the expiration time.
    * @param string $session_string
    *   The hashed session ID of the requestor of ticket.
+   * @param string $uid
+   *   The uid of the requestor.
    * @param string $username
    *   The username of the requestor.
    * @param string $service_string
@@ -34,10 +36,11 @@ class ProxyTicket extends ServiceTicket {
    * @param array $proxy_chain
    *   The chain of pgtUrls used to generate this proxy ticket.
    */
-  public function __construct($identifier, $expiry, $session_string, $username, $service_string, $creds_supplied, $proxy_chain) {
+  public function __construct($identifier, $expiry, $session_string, $uid, $username, $service_string, $creds_supplied, $proxy_chain) {
     $this->id = $identifier;
     $this->expirationTime = $expiry;
     $this->session = $session_string;
+    $this->uid = $uid;
     $this->user = $username;
     $this->service = $service_string;
     $this->renew = $creds_supplied;
