@@ -165,7 +165,7 @@ class TicketValidationController implements ContainerInjectionInterface {
       $ticket_string = $request->query->get('ticket');
       $service_string = urldecode($request->query->get('service'));
       $renew = $request->query->has('renew') ? TRUE : FALSE;
-      
+
       // Load the ticket. If it doesn't exist or is the wrong type, return the
       // appropriate failure response.
       try {
@@ -175,6 +175,7 @@ class TicketValidationController implements ContainerInjectionInterface {
           case self::CAS_PROTOCOL_3_SERVICE:
             $ticket = $this->ticketStore->retrieveServiceTicket($ticket_string);
             break;
+
           case self::CAS_PROTOCOL_2_PROXY:
           case self::CAS_PROTOCOL_3_PROXY:
             $ticket = $this->ticketStore->retrieveProxyTicket($ticket_string);
@@ -182,7 +183,7 @@ class TicketValidationController implements ContainerInjectionInterface {
         }
       }
       catch (TicketTypeException $e) {
-        $this->logger->log("Failed to validate ticket: $ticket_string. " . $e ->getMessage());
+        $this->logger->log("Failed to validate ticket: $ticket_string. " . $e->getMessage());
         return $this->generateTicketTypeResponse($validation_type, $format);
       }
       catch (TicketMissingException $e) {
@@ -250,6 +251,7 @@ class TicketValidationController implements ContainerInjectionInterface {
    *   Either XML or JSON
    * @param Ticket $ticket
    *   The ticket object for context
+   *
    * @return Response
    *   A Response object with the failure.
    */
@@ -265,7 +267,7 @@ class TicketValidationController implements ContainerInjectionInterface {
           </cas:authenticationFailure>
          </cas:serviceResponse>';
     }
-    else if ($format == 'json') {
+    elseif ($format == 'json') {
       // TODO
     }
 
@@ -278,9 +280,10 @@ class TicketValidationController implements ContainerInjectionInterface {
    * @param int $validation_type
    *   The Type of validation request.
    * @param string $format
-   *   Either XML or JSON
+   *   Either XML or JSON.
    * @param Ticket $ticket
-   *   The ticket object for context
+   *   The ticket object for context.
+   *
    * @return Response
    *   A Response object with the failure.
    */
@@ -296,7 +299,7 @@ class TicketValidationController implements ContainerInjectionInterface {
           </cas:authenticationFailure>
          </cas:serviceResponse>';
     }
-    else if ($format == 'json') {
+    elseif ($format == 'json') {
       // TODO
     }
 
@@ -309,9 +312,10 @@ class TicketValidationController implements ContainerInjectionInterface {
    * @param int $validation_type
    *   The Type of validation request.
    * @param string $format
-   *   Either XML or JSON
+   *   Either XML or JSON.
    * @param Ticket $ticket
-   *   The ticket object for context
+   *   The ticket object for context.
+   *
    * @return Response
    *   A Response object with the failure.
    */
@@ -327,7 +331,7 @@ class TicketValidationController implements ContainerInjectionInterface {
           </cas:authenticationFailure>
          </cas:serviceResponse>';
     }
-    else if ($format == 'json') {
+    elseif ($format == 'json') {
       // TODO
     }
 
@@ -341,6 +345,7 @@ class TicketValidationController implements ContainerInjectionInterface {
    *   The Type of validation request.
    * @param string $format
    *   Either XML or JSON
+   *
    * @return Response
    *   A Response object with the failure.
    */
@@ -356,13 +361,12 @@ class TicketValidationController implements ContainerInjectionInterface {
           </cas:authenticationFailure>
          </cas:serviceResponse>';
     }
-    else if ($format == 'json') {
+    elseif ($format == 'json') {
       // TODO
     }
 
     return Response::create($response_text, 200);
   }
-
 
 
   /**
@@ -371,7 +375,8 @@ class TicketValidationController implements ContainerInjectionInterface {
    * @param int $validation_type
    *   The type of validation request.
    * @param string $format
-   *   Either XML or JSON
+   *   Either XML or JSON.
+   *
    * @return Response
    *   A Response object with the failure.
    */
@@ -387,7 +392,7 @@ class TicketValidationController implements ContainerInjectionInterface {
           </cas:authenticationFailure>
          </cas:serviceResponse>';
     }
-    else if ($format == 'json') {
+    elseif ($format == 'json') {
       // TODO
     }
 
@@ -400,7 +405,8 @@ class TicketValidationController implements ContainerInjectionInterface {
    * @param int $validation_type
    *   The type of validation request.
    * @param string $format
-   *   Either XML or JSON
+   *   Either XML or JSON.
+   *
    * @return Response
    *   A Response object with the failure.
    */
@@ -409,14 +415,14 @@ class TicketValidationController implements ContainerInjectionInterface {
       return $this->generateVersion1Failure();
     }
     if ($format == 'xml') {
-      $response_text = 
+      $response_text =
         '<cas:serviceResponse xmlns:cas="http://www.yale.edu/tp/cas">
           <cas:authenticationFailure code="INVALID_REQUEST">
             Missing required request parameters
           </cas:authenticationFailure>
          </cas:serviceResponse>';
     }
-    else if ($format == 'json') {
+    elseif ($format == 'json') {
       //TODO
       $response_text = '';
     }
@@ -430,7 +436,8 @@ class TicketValidationController implements ContainerInjectionInterface {
    * @param int $validation_type
    *   The type of validation request.
    * @param string $format
-   *   Either XML or JSON
+   *   Either XML or JSON.
+   *
    * @return Response
    *   A Response object with the failure.
    */
@@ -439,14 +446,14 @@ class TicketValidationController implements ContainerInjectionInterface {
       return $this->generateVersion1Failure();
     }
     if ($format == 'xml') {
-      $response_text = 
+      $response_text =
         '<cas:serviceResponse xmlns:cas="http://www.yale.edu/tp/cas">
           <cas:authenticationFailure code="INVALID_PROXY_CALLBACK">
             The credentials specified for proxy authentication do not meet security requirements.
           </cas:authenticationFailure>
          </cas:serviceResponse>';
     }
-    else if ($format == 'json') {
+    elseif ($format == 'json') {
       //TODO
       $response_text = '';
     }
@@ -468,7 +475,7 @@ class TicketValidationController implements ContainerInjectionInterface {
    * Generate a ticket validation success message.
    *
    * @return Response
-   *   A Response object with the success message, with optional attribute blocks.
+   *   A Response object with the success message and optional attribute blocks.
    */
   private function generateTicketValidationSuccess($validation_type, $format, $ticket, $pgtIou) {
     if ($validation_type == self::CAS_PROTOCOL_1) {
@@ -484,7 +491,7 @@ class TicketValidationController implements ContainerInjectionInterface {
         $account = $this->userLoadByName($ticket->getUser());
         $response_text .= "<cas:attributes>\n";
         foreach ($attributes as $attr) {
-          foreach($account->get($attr)->getValue() as $value) {
+          foreach ($account->get($attr)->getValue() as $value) {
             $response_text .= "<cas:$attr>" . $value['value'] . "</cas:$attr>";
           }
         }
@@ -497,7 +504,7 @@ class TicketValidationController implements ContainerInjectionInterface {
       $response_text .= "</cas:authenticationSuccess>\n</cas:serviceResponse>";
 
     }
-    else if ($format == 'json') {
+    elseif ($format == 'json') {
       //TODO
     }
 
@@ -548,8 +555,10 @@ class TicketValidationController implements ContainerInjectionInterface {
       $response_text .= "</cas:authenticationSuccess>\n</cas:serviceResponse>";
 
     }
-    else if ($format == 'json') {
-      //TODO
+    else {
+      if ($format == 'json') {
+        //TODO
+      }
     }
 
     return Response::create($response_text, 200);
@@ -621,6 +630,7 @@ class TicketValidationController implements ContainerInjectionInterface {
    *
    * @param Ticket $ticket
    *   The ticket for this request.
+   *
    * @return Response
    *   A Response object with the success and username.
    */
@@ -632,7 +642,7 @@ class TicketValidationController implements ContainerInjectionInterface {
    * Encapsulates user_load_by_name.
    *
    * @param string $username
-   *   The username to load
+   *   The username to load.
    *
    * @return \Drupal\user\Entity\User
    *   The user object.
@@ -640,4 +650,5 @@ class TicketValidationController implements ContainerInjectionInterface {
   private function userLoadByName($username) {
     return user_load_by_name($username);
   }
+
 }
