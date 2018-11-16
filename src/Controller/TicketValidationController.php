@@ -8,6 +8,7 @@
 namespace Drupal\cas_server\Controller;
 
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -22,6 +23,7 @@ use Drupal\Component\Utility\Crypt;
 use Drupal\cas_server\Ticket\TicketFactory;
 use Drupal\cas_server\Ticket\ProxyTicket;
 use Drupal\cas_server\Ticket\Ticket;
+use Drupal\cas_server\Event\CASAttributesAlterEvent;
 
 /**
  * Class TicketValidationController.
@@ -105,6 +107,8 @@ class TicketValidationController implements ContainerInjectionInterface {
    */
   protected $ticketFactory;
 
+  protected $eventDispatcher;
+
   /**
    * Constructor.
    *
@@ -121,20 +125,21 @@ class TicketValidationController implements ContainerInjectionInterface {
    * @param TicketFactory $ticket_factory
    *   The CAS ticket factory.
    */
-  public function __construct(RequestStack $request_stack, TicketStorageInterface $ticket_store, DebugLogger $debug_logger, ConfigHelper $config_helper, Client $http_client, TicketFactory $ticket_factory) {
+  public function __construct(RequestStack $request_stack, TicketStorageInterface $ticket_store, DebugLogger $debug_logger, ConfigHelper $config_helper, Client $http_client, TicketFactory $ticket_factory, EventDispatcherInterface $eventDispatcher) {
     $this->requestStack = $request_stack;
     $this->ticketStore = $ticket_store;
     $this->logger = $debug_logger;
     $this->configHelper = $config_helper;
     $this->httpClient = $http_client;
     $this->ticketFactory = $ticket_factory;
+    $this->eventDispatcher = $eventDispatcher;
   }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static($container->get('request_stack'), $container->get('cas_server.storage'), $container->get('cas_server.logger'), $container->get('cas_server.config_helper'), $container->get('http_client'), $container->get('cas_server.ticket_factory'));
+    return new static($container->get('request_stack'), $container->get('cas_server.storage'), $container->get('cas_server.logger'), $container->get('cas_server.config_helper'), $container->get('http_client'), $container->get('cas_server.ticket_factory'), $container->get('event_dispatcher'));
   }
 
   /**
@@ -481,18 +486,27 @@ class TicketValidationController implements ContainerInjectionInterface {
     if ($validation_type == self::CAS_PROTOCOL_1) {
       return $this->generateVersion1Success($ticket);
     }
-    $attributes = $this->configHelper->getAttributesForService($ticket->getService());
+    $account = $this->userLoadByName($ticket->getUser());
 
+    $event = new CASAttributesAlterEvent($account, $ticket);
+
+    $this->eventDispatcher->dispatch(CASAttributesAlterEvent::CAS_ATTRIBUTES_ALTER_EVENT, $event);
+
+    $attributes = $event->getAttributes();
     if ($format == 'xml') {
       $response_text = "<cas:serviceResponse xmlns:cas='http://www.yale.edu/tp/cas'>
         <cas:authenticationSuccess>
           <cas:user>" . $ticket->getUser() . "</cas:user>";
       if (!empty($attributes)) {
-        $account = $this->userLoadByName($ticket->getUser());
         $response_text .= "<cas:attributes>\n";
-        foreach ($attributes as $attr) {
-          foreach ($account->get($attr)->getValue() as $value) {
-            $response_text .= "<cas:$attr>" . $value['value'] . "</cas:$attr>";
+        foreach ($attributes as $key => $value) {
+          if (is_array($value)) {
+            foreach ($value as $arrayvalue) {
+              $response_text .= "<cas:$key>" . $arrayvalue . "</cas:$key>";
+            }
+          }
+          else {
+            $response_text .= "<cas:$key>" . $value . "</cas:$key>";
           }
         }
         $response_text .= "</cas:attributes>\n";
@@ -527,16 +541,24 @@ class TicketValidationController implements ContainerInjectionInterface {
   private function generateProxyTicketValidationSuccess($format, $ticket, $pgtIou) {
     $attributes = $this->configHelper->getAttributesForService($ticket->getService());
 
+    $account = $this->userLoadByName($ticket->getUser());
+    $event = new CASAttributesAlterEvent($account, $ticket);
+    $this->eventDispatcher->dispatch(CASAttributesAlterEvent::CAS_ATTRIBUTES_ALTER_EVENT, $event);
+
     if ($format == 'xml') {
       $response_text = "<cas:serviceResponse xmlns:cas='http://www.yale.edu/tp/cas'>
         <cas:authenticationSuccess>
           <cas:user>" . $ticket->getUser() . "</cas:user>";
       if (!empty($attributes)) {
-        $account = $this->userLoadByName($ticket->getUser());
         $response_text .= "<cas:attributes>\n";
-        foreach ($attributes as $attr) {
-          foreach ($account->get($attr)->getValue() as $value) {
-            $response_text .= "<cas:$attr>" . $value['value'] . "</cas:$attr>";
+        foreach ($attributes as $key => $value) {
+          if (is_array($value)) {
+            foreach ($value as $arrayvalue) {
+              $response_text .= "<cas:$key>" . $arrayvalue . "</cas:$key>";
+            }
+          }
+          else {
+            $response_text .= "<cas:$key>" . $value . "</cas:$key>";
           }
         }
         $response_text .= "</cas:attributes>\n";
@@ -555,10 +577,8 @@ class TicketValidationController implements ContainerInjectionInterface {
       $response_text .= "</cas:authenticationSuccess>\n</cas:serviceResponse>";
 
     }
-    else {
-      if ($format == 'json') {
-        //TODO
-      }
+    elseif ($format == 'json') {
+      //TODO
     }
 
     return Response::create($response_text, 200);
