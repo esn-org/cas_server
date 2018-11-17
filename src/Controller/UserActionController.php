@@ -241,7 +241,7 @@ class UserActionController implements ContainerInjectionInterface {
         return FALSE;
       }
       catch (TicketMissingException $e) {
-        $this->logger->log("Ticket not found " . $tgt->getId());
+        $this->logger->log("Ticket not found " . urldecode($_COOKIE['cas_tgc']));
         return FALSE;
       }
 
@@ -250,7 +250,7 @@ class UserActionController implements ContainerInjectionInterface {
         return FALSE;
       }
 
-      if ($this->account->getAccountName() != $tgt->getUser()) {
+      if ($this->account->id() != $tgt->getUid()) {
         return FALSE;
       }
 
