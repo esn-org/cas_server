@@ -3,7 +3,7 @@
 namespace Drupal\cas_server\Event;
 
 
-use Drupal\cas_server\Ticket\ServiceTicket;
+use Drupal\cas_server\Ticket\Ticket;
 use Drupal\user\UserInterface;
 use Symfony\Component\EventDispatcher\Event;
 
@@ -17,14 +17,14 @@ class CasServerTicketAlterEvent extends Event {
    * CasServerTicketAlterEvent constructor.
    *
    * @param UserInterface $user
-   * @param ServiceTicket $ticket
+   * @param Ticket $ticket
    */
-  public function __construct(ServiceTicket $ticket) {
+  public function __construct(Ticket $ticket) {
     $this->ticket = $ticket;
   }
 
   /**
-   * @return ServiceTicket
+   * @return Ticket
    */
   public function getTicket() {
     return $this->ticket;
