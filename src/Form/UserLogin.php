@@ -7,6 +7,7 @@
 
 namespace Drupal\cas_server\Form;
 
+use Drupal\cas_server\Logger\DebugLogger;
 use Drupal\user\UserAuthInterface;
 use Drupal\user\Entity\User;
 use Drupal\Core\Form\FormBase;
@@ -40,8 +41,10 @@ class UserLogin extends FormBase {
    *   The session manager.
    * @param RequestStack $request_stack
    *   The Symfony request stack.
+   * @param DebugLogger $debug_logger
+   *   The logger.
    */
-  public function __construct(UserAuthInterface $user_auth, TicketFactory $ticket_factory, ConfigHelper $config_helper, SessionManagerInterface $session_manager, RequestStack $request_stack) {
+  public function __construct(UserAuthInterface $user_auth, TicketFactory $ticket_factory, ConfigHelper $config_helper, SessionManagerInterface $session_manager, RequestStack $request_stack, DebugLogger $debug_logger) {
     $this->authService = $user_auth;
     $this->ticketFactory = $ticket_factory;
     $this->configHelper = $config_helper;
@@ -54,7 +57,7 @@ class UserLogin extends FormBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static($container->get('user.auth'), $container->get('cas_server.ticket_factory'), $container->get('cas_server.config_helper'), $container->get('session_manager'), $container->get('request_stack'));
+    return new static($container->get('user.auth'), $container->get('cas_server.ticket_factory'), $container->get('cas_server.config_helper'), $container->get('session_manager'), $container->get('request_stack'), $container->get('cas_server.logger'));
   }
 
   /**
