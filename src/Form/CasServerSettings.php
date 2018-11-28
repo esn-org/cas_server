@@ -52,7 +52,7 @@ class CasServerSettings extends ConfigFormBase {
 
     $form['ticket'] = array(
       '#type' => 'details',
-      '#title' => $this->t('Ticket timeouts'),
+      '#title' => $this->t('Ticket settings'),
       '#open' => TRUE,
       '#tree' => TRUE,
     );
@@ -95,6 +95,17 @@ class CasServerSettings extends ConfigFormBase {
           ':input[name="ticket[ticket_granting_auth]"]' => array('checked' => TRUE),
         ),
       ),
+    );
+    $form['ticket']['username'] = array(
+      '#type' => 'select',
+      '#title' => $this->t('Username value'),
+      '#description' => $this->t('Which value to use for the username to respond.'),
+      '#options' => [
+        'name' => $this->t('Username'),
+        'mail' => $this->t('Email Address'),
+        'uid' => $this->t('UID'),
+      ],
+      '#default_value' => $config->get('ticket.ticket_username_attribute'),
     );
 
     $form['messages'] = array(
@@ -146,9 +157,12 @@ class CasServerSettings extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-    // Check timeouts to make sure they are integers
+    // Check timeouts to make sure they are integers.
     $values = $form_state->getValue('ticket');
     foreach ($values as $key => $value) {
+      if ($key == 'username') {
+        continue;
+      }
       if (!is_numeric($value) || !(round($value) == $value)) {
         $form_state->setErrorByName("ticket][$key", $this->t('Ticket timeouts must be integer-valued'));
       }
@@ -168,7 +182,8 @@ class CasServerSettings extends ConfigFormBase {
       ->set('ticket.proxy_ticket_timeout', (int)$ticket_data['proxy'])
       ->set('ticket.proxy_granting_ticket_timeout', (int)$ticket_data['proxy_granting'])
       ->set('ticket.ticket_granting_ticket_auth', (int)$ticket_data['ticket_granting_auth'])
-      ->set('ticket.ticket_granting_ticket_timeout', (int)$ticket_data['ticket_granting']);
+      ->set('ticket.ticket_granting_ticket_timeout', (int)$ticket_data['ticket_granting'])
+      ->set('ticket.ticket_username_attribute', $ticket_data['username']);
 
     $message_data = $form_state->getValue('messages');
     $config

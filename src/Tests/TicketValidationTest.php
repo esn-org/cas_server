@@ -181,17 +181,17 @@ class TicketValidationTest extends WebTestBase {
     $service = 'https://example.com';
     
     // Protocol version 2
-    $st = $this->ticketFactory->createProxyTicket($service, FALSE, [], 'foo', $this->exampleUser->id(), $this->exampleUser->getUsername());
+    $st = $this->ticketFactory->createProxyTicket($service, FALSE, [], 'foo', $this->exampleUser->id(), $this->ticketFactory->getUsernameAttribute($this->exampleUser));
     $this->drupalGet('cas/proxyValidate', ['query' => ['service' => $service, 'ticket' => $st->getId()]]);   
     $this->assertRaw('<cas:authenticationSuccess>');
-    $this->assertRaw('<cas:user>' . $this->exampleUser->getUsername() . '</cas:user>');
+    $this->assertRaw('<cas:user>' . $this->ticketFactory->getUsernameAttribute($this->exampleUser) . '</cas:user>');
     $this->assertResponse(200);
 
     // Protocol version 3
-    $st = $this->ticketFactory->createProxyTicket($service, FALSE, [], 'foo', $this->exampleUser->id(), $this->exampleUser->getUsername());
+    $st = $this->ticketFactory->createProxyTicket($service, FALSE, [], 'foo', $this->exampleUser->id(), $this->ticketFactory->getUsernameAttribute($this->exampleUser));
     $this->drupalGet('cas/p3/proxyValidate', ['query' => ['service' => $service, 'ticket' => $st->getId()]]);      
     $this->assertRaw('<cas:authenticationSuccess');
-    $this->assertRaw('<cas:user>' . $this->exampleUser->getUsername() . '</cas:user>');   
+    $this->assertRaw('<cas:user>' . $this->ticketFactory->getUsernameAttribute($this->exampleUser) . '</cas:user>');
     $this->assertResponse(200);
 
   }
@@ -206,13 +206,13 @@ class TicketValidationTest extends WebTestBase {
     $service = 'https://example.com';
     
     // Protocol version 2
-    $st = $this->ticketFactory->createProxyTicket($service, FALSE, [], 'foo', $this->exampleUser->id(), $this->exampleUser->getUsername());
+    $st = $this->ticketFactory->createProxyTicket($service, FALSE, [], 'foo', $this->exampleUser->id(), $this->ticketFactory->getUsernameAttribute($this->exampleUser));
     $this->drupalGet('cas/serviceValidate', ['query' => ['service' => $service, 'ticket' => $st->getId()]]);   
     $this->assertRaw('<cas:authenticationFailure code="INVALID_TICKET_SPEC">');
     $this->assertResponse(200);
 
     // Protocol version 3
-    $st = $this->ticketFactory->createProxyTicket($service, FALSE, [], 'foo', $this->exampleUser->id(), $this->exampleUser->getUsername());
+    $st = $this->ticketFactory->createProxyTicket($service, FALSE, [], 'foo', $this->exampleUser->id(), $this->ticketFactory->getUsernameAttribute($this->exampleUser));
     $this->drupalGet('cas/p3/serviceValidate', ['query' => ['service' => $service, 'ticket' => $st->getId()]]);      
     $this->assertRaw('<cas:authenticationFailure code="INVALID_TICKET_SPEC">');
     $this->assertResponse(200);
@@ -231,7 +231,7 @@ class TicketValidationTest extends WebTestBase {
     $st = $this->ticketFactory->createServiceTicket($service, FALSE);
     $this->drupalGet('cas/validate', ['query' => ['service' => $service, 'ticket' => $st->getId()]]);
     $this->assertText('yes');
-    $this->assertText($this->exampleUser->getUsername());
+    $this->assertText($this->ticketFactory->getUsernameAttribute($this->exampleUser));
     $this->assertNoRaw('html');
     $this->assertResponse(200);
 
@@ -239,14 +239,14 @@ class TicketValidationTest extends WebTestBase {
     $st = $this->ticketFactory->createServiceTicket($service, FALSE);
     $this->drupalGet('cas/serviceValidate', ['query' => ['service' => $service, 'ticket' => $st->getId()]]);   
     $this->assertRaw('<cas:authenticationSuccess>');
-    $this->assertRaw('<cas:user>' . $this->exampleUser->getUsername() . '</cas:user>');
+    $this->assertRaw('<cas:user>' . $this->ticketFactory->getUsernameAttribute($this->exampleUser) . '</cas:user>');
     $this->assertResponse(200);
 
     // Protocol version 3
     $st = $this->ticketFactory->createServiceTicket($service, FALSE);
     $this->drupalGet('cas/p3/serviceValidate', ['query' => ['service' => $service, 'ticket' => $st->getId()]]);      
     $this->assertRaw('<cas:authenticationSuccess>');
-    $this->assertRaw('<cas:user>' . $this->exampleUser->getUsername() . '</cas:user>');
+    $this->assertRaw('<cas:user>' . $this->ticketFactory->getUsernameAttribute($this->exampleUser) . '</cas:user>');
     $this->assertResponse(200);
   }
 

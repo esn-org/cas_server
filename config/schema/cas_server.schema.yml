@@ -21,6 +21,9 @@ cas_server.settings:
         ticket_granting_ticket_auth:
           type: boolean
           label: 'Whether to use a ticket granting cookie'
+        ticket_username_attribute:
+          type: string
+          label: 'The user attribute to use for the username'
 
     messages:
       type: mapping

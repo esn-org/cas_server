@@ -134,6 +134,17 @@ Class ConfigHelper {
   }
 
   /**
+   * The attribute to use for the username.
+   *
+   * @return int
+   *   The number of seconds a service ticket is valid.
+   */
+  public function getTicketUsernameAttribute() {
+    $value = $this->settings->get('ticket.ticket_username_attribute');
+    return $value ? $value : 'name';
+  }
+
+  /**
    * Check whether a service is configured for single sign on.
    *
    * @param string $service

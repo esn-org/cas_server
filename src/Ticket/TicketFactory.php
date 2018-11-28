@@ -10,6 +10,7 @@ namespace Drupal\cas_server\Ticket;
 use Drupal\cas_server\Event\CasServerTicketAlterEvent;
 use Drupal\Component\Utility\Crypt;
 use Drupal\cas_server\Configuration\ConfigHelper;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\SessionManagerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
@@ -74,7 +75,7 @@ class TicketFactory {
     $expiration_time = REQUEST_TIME + $this->configHelper->getProxyGrantingTicketTimeout();
     $session = Crypt::hashBase64($this->sessionManager->getId());
     $uid = \Drupal::currentUser()->id();
-    $name = \Drupal::currentUser()->getAccountName();
+    $name = $this->getUsernameAttribute(\Drupal::currentUser());
 
     $pgt = new ProxyGrantingTicket($id, $expiration_time, $session, $uid, $name, $proxy_chain);
     $event = new CasServerTicketAlterEvent($pgt);
@@ -102,7 +103,7 @@ class TicketFactory {
     $expiration_time = REQUEST_TIME + $this->configHelper->getServiceTicketTimeout();
     $session = Crypt::hashBase64($this->sessionManager->getId());
     $uid = \Drupal::currentUser()->id();
-    $name = \Drupal::currentUser()->getAccountName();
+    $name = $this->getUsernameAttribute(\Drupal::currentUser());
 
     $st = new ServiceTicket($id, $expiration_time, $session, $uid, $name, $service_string, $renew);
     $event = new CasServerTicketAlterEvent($st);
@@ -156,7 +157,7 @@ class TicketFactory {
     $expiration_time = REQUEST_TIME + $this->configHelper->getTicketGrantingTicketTimeout();
     $session = Crypt::hashBase64($this->sessionManager->getId());
     $uid = \Drupal::currentUser()->id();
-    $name = \Drupal::currentUser()->getAccountName();
+    $name = $this->getUsernameAttribute(\Drupal::currentUser());
 
     $tgt = new TicketGrantingTicket($id, $expiration_time, $session, $uid, $name);
     $event = new CasServerTicketAlterEvent($tgt);
@@ -164,6 +165,29 @@ class TicketFactory {
     $this->ticketStore->storeTicketGrantingTicket($tgt);
 
     return $tgt;
+  }
+
+  /**
+   * Get the username for a ticket.
+   *
+   * @param AccountInterface $account
+   *   The account to get the username for.
+   *
+   * @return string
+   *   The username.
+   */
+  public function getUsernameAttribute(AccountInterface $account) {
+    if ($this->configHelper->getTicketUsernameAttribute() == 'mail') {
+      $name = $account->getEmail();
+    }
+    elseif ($this->configHelper->getTicketUsernameAttribute() == 'uid') {
+      $name = $account->id();
+    }
+    else {
+      $name = $account->getAccountName();
+    }
+
+    return $name;
   }
 
 }
