@@ -50,7 +50,7 @@ class DatabaseTicketStorage implements TicketStorageInterface {
    */
   public function retrieveServiceTicket($ticket_string) {
     $result = $this->connection->select('cas_server_ticket_store', 'c')
-      ->fields('c', array('id', 'expiration', 'type', 'session', 'user', 'service', 'renew'))
+      ->fields('c', array('id', 'expiration', 'type', 'session', 'uid', 'user', 'service', 'renew'))
       ->condition('id', $ticket_string)
       ->execute()
       ->fetch();

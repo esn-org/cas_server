@@ -133,7 +133,7 @@ class UserActionController implements ContainerInjectionInterface {
   public function login() {
     $this->killSwitch->trigger();
     $request = $this->requestStack->getCurrentRequest();
-    $service = $request->query->has('service') ? urldecode($request->query->get('service')) : NULL;
+    $service = $request->query->has('service') ? $request->query->get('service') : NULL;
 
     // If we have a ticket, it is because we've already processed the form and
     // need to be redirected back to the service.

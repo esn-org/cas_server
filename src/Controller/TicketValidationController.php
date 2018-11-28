@@ -178,7 +178,7 @@ class TicketValidationController implements ContainerInjectionInterface {
 
     if ($request->query->has('ticket') && $request->query->has('service')) {
       $ticket_string = $request->query->get('ticket');
-      $service_string = urldecode($request->query->get('service'));
+      $service_string = $request->query->get('service');
       $renew = $request->query->has('renew') ? TRUE : FALSE;
 
       // Load the ticket. If it doesn't exist or is the wrong type, return the
