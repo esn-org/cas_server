@@ -98,8 +98,6 @@ class UserActionControllerTest extends WebTestBase {
    */
   public function testAlreadyLoggedIn() {
     $this->drupalLogin($this->exampleUser);
-    $tgt = $this->ticketFactory->createTicketGrantingTicket();
-    $this->curlCookies[] = 'cas_tgc=' . $tgt->getId();
     $this->drupalGet('cas/login');
     $this->assertResponse(200);
     $this->assertText('You are logged in to CAS single sign on');
@@ -163,8 +161,6 @@ class UserActionControllerTest extends WebTestBase {
     $session_id = $this->sessionId;
     $service = Url::fromRoute('cas_server.validate1');
     $service->setAbsolute();
-    $tgt = $this->ticketFactory->createTicketGrantingTicket();
-    $this->curlCookies[] = 'cas_tgc=' . $tgt->getId();
     $this->drupalGet('cas/login', ['query' => ['service' => $service->toString()]]);
     $this->assertEqual($this->redirectCount, 1);
     

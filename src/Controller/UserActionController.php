@@ -232,7 +232,7 @@ class UserActionController implements ContainerInjectionInterface {
       return FALSE;
     }
 
-    if (isset($_COOKIE['cas_tgc'])) {
+    if ($this->configHelper->shouldUseTicketGrantingTicket() && isset($_COOKIE['cas_tgc'])) {
       try {
         $tgt = $this->ticketStore->retrieveTicketGrantingTicket(urldecode($_COOKIE['cas_tgc']));
       }
@@ -254,6 +254,9 @@ class UserActionController implements ContainerInjectionInterface {
         return FALSE;
       }
 
+      return TRUE;
+    }
+    elseif (!$this->configHelper->shouldUseTicketGrantingTicket() && !$this->account->isAnonymous()) {
       return TRUE;
     }
     return FALSE;

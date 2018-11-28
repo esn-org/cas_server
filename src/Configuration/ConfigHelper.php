@@ -94,6 +94,16 @@ Class ConfigHelper {
   }
 
   /**
+   * Return whether to use the ticket granting ticket or not.
+   *
+   * @return bool
+   *   Whether to use the ticket granting cookie.
+   */
+  public function shouldUseTicketGrantingTicket() {
+    return (bool) $this->settings->get('ticket.ticket_granting_ticket_auth');
+  }
+
+  /**
    * Return the timeout for a ticket-granting ticket.
    *
    * @return int

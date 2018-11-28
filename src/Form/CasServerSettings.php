@@ -77,12 +77,24 @@ class CasServerSettings extends ConfigFormBase {
       '#size' => 30,
       '#default_value' => $config->get('ticket.proxy_granting_ticket_timeout'),
     );
+    $form['ticket']['ticket_granting_auth'] = array(
+      '#type' => 'checkbox',
+      '#title' => $this->t('Use ticket granting ticket'),
+      '#description' => $this->t('When checked, a user will be granted a ticket for login. If a user is logged in to Drupal, but does not have the ticket (or it has expired) then checking this will force them to enter their credentials again.'),
+      '#size' => 30,
+      '#default_value' => (bool) $config->get('ticket.ticket_granting_ticket_auth'),
+    );
     $form['ticket']['ticket_granting'] = array(
       '#type' => 'textfield',
       '#title' => $this->t('Ticket granting ticket timeout'),
       '#description' => $this->t('Time in seconds for which a ticket granting ticket is valid.'),
       '#size' => 30,
       '#default_value' => $config->get('ticket.ticket_granting_ticket_timeout'),
+      '#states' => array(
+        'visible' => array(
+          ':input[name="ticket[ticket_granting_auth]"]' => array('checked' => TRUE),
+        ),
+      ),
     );
 
     $form['messages'] = array(
@@ -155,6 +167,7 @@ class CasServerSettings extends ConfigFormBase {
       ->set('ticket.service_ticket_timeout', (int)$ticket_data['service'])
       ->set('ticket.proxy_ticket_timeout', (int)$ticket_data['proxy'])
       ->set('ticket.proxy_granting_ticket_timeout', (int)$ticket_data['proxy_granting'])
+      ->set('ticket.ticket_granting_ticket_auth', (int)$ticket_data['ticket_granting_auth'])
       ->set('ticket.ticket_granting_ticket_timeout', (int)$ticket_data['ticket_granting']);
 
     $message_data = $form_state->getValue('messages');

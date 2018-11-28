@@ -18,6 +18,9 @@ cas_server.settings:
         ticket_granting_ticket_timeout:
           type: integer
           label: 'Ticket Granting Ticket Timeout (seconds)'
+        ticket_granting_ticket_auth:
+          type: boolean
+          label: 'Whether to use a ticket granting cookie'
 
     messages:
       type: mapping

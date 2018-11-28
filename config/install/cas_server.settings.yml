@@ -3,6 +3,7 @@ ticket:
   proxy_ticket_timeout: 10
   proxy_granting_ticket_timeout: 7200
   ticket_granting_ticket_timeout: 28800
+  ticket_granting_ticket_auth: false
 
 messages:
   invalid_service: ''

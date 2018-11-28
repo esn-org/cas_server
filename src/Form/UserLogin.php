@@ -128,8 +128,10 @@ class UserLogin extends FormBase {
         $account = User::load($uid);
         user_login_finalize($account);
         if (empty($service) || $this->configHelper->verifyServiceForSso($service)) {
-          $tgt = $this->ticketFactory->createTicketGrantingTicket();
-          setcookie('cas_tgc', $tgt->getId(), REQUEST_TIME + $this->configHelper->getTicketGrantingTicketTimeout(), '/cas');
+          if ($this->configHelper->shouldUseTicketGrantingTicket()) {
+            $tgt = $this->ticketFactory->createTicketGrantingTicket();
+            setcookie('cas_tgc', $tgt->getId(), REQUEST_TIME + $this->configHelper->getTicketGrantingTicketTimeout(), '/cas');
+          }
         }
         if (!empty($service)) {
           $st = $this->ticketFactory->createServiceTicket($service, TRUE);
