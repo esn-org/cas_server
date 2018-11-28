@@ -47,6 +47,14 @@ cas_server.settings:
           type: boolean
           label: 'Enable debugging log'
 
+    login:
+      type: mapping
+      label: 'Login Options'
+      mapping:
+        username_attribute:
+          type: string
+          label: 'Login attribute to use for authentication'
+
 cas_server.cas_server_service.*:
   type: config_entity
   label: 'Service definitions'

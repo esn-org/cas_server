@@ -150,6 +150,24 @@ class CasServerSettings extends ConfigFormBase {
       '#default_value' => $config->get('debugging.log'),
     );
 
+    $form['login'] = array(
+      '#type' => 'details',
+      '#title' => 'Login Options',
+      '#open' => FALSE,
+      '#tree' => TRUE,
+    );
+    $form['login']['username'] = array(
+      '#type' => 'select',
+      '#title' => $this->t('Username field'),
+      '#description' => $this->t('Which field to use for user authentication.'),
+      '#options' => [
+        'name' => $this->t('Username'),
+        'mail' => $this->t('Email Address'),
+        'both' => $this->t('Username or email address'),
+      ],
+      '#default_value' => $config->get('login.username_attribute'),
+    );
+
     return parent::buildForm($form, $form_state);
   }
 
@@ -192,6 +210,7 @@ class CasServerSettings extends ConfigFormBase {
       ->set('messages.logged_in', $message_data['logged_in']);
 
     $config->set('debugging.log', (bool)$form_state->getValue(['debugging', 'log']));
+    $config->set('login.username_attribute', $form_state->getValue(['login', 'username']));
     $config->save();
 
     parent::submitForm($form, $form_state);

@@ -136,8 +136,8 @@ Class ConfigHelper {
   /**
    * The attribute to use for the username.
    *
-   * @return int
-   *   The number of seconds a service ticket is valid.
+   * @return string
+   *   The username attribute.
    */
   public function getTicketUsernameAttribute() {
     $value = $this->settings->get('ticket.ticket_username_attribute');
@@ -193,6 +193,17 @@ Class ConfigHelper {
       return $m;
     }
     return FALSE;
+  }
+
+  /**
+   * The attribute to use for authentication.
+   *
+   * @return string
+   *   The username attribute.
+   */
+  public function getAuthenticationSourceField() {
+    $value = $this->settings->get('login.username_attribute');
+    return $value ? $value : 'name';
   }
 
   /**
