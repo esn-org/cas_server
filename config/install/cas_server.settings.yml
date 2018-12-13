@@ -16,4 +16,5 @@ debugging:
 
 login:
   username_attribute: name
+  reset_password: false
 

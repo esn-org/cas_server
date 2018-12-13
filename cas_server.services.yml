@@ -7,7 +7,7 @@ services:
     arguments: ['@config.factory', '@logger.factory']
   cas_server.config_helper:
     class: Drupal\cas_server\Configuration\ConfigHelper
-    arguments: ['@config.factory', '@entity.query', '@entity.manager']
+    arguments: ['@config.factory', '@entity_type.manager']
   cas_server.ticket_factory:
     class: Drupal\cas_server\Ticket\TicketFactory
     arguments: ['@cas_server.storage', '@cas_server.config_helper', '@session_manager', '@event_dispatcher']

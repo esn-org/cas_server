@@ -167,6 +167,11 @@ class CasServerSettings extends ConfigFormBase {
       ],
       '#default_value' => $config->get('login.username_attribute'),
     );
+    $form['login']['reset_password'] = array(
+      '#type' => 'checkbox',
+      '#title' => $this->t('Show reset password link on cas login form'),
+      '#default_value' => $config->get('login.reset_password'),
+    );
 
     return parent::buildForm($form, $form_state);
   }
@@ -211,6 +216,7 @@ class CasServerSettings extends ConfigFormBase {
 
     $config->set('debugging.log', (bool)$form_state->getValue(['debugging', 'log']));
     $config->set('login.username_attribute', $form_state->getValue(['login', 'username']));
+    $config->set('login.reset_password', $form_state->getValue(['login', 'reset_password']));
     $config->save();
 
     parent::submitForm($form, $form_state);

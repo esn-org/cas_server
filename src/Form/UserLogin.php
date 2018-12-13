@@ -121,6 +121,24 @@ class UserLogin extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Submit'),
     );
+
+    if ($this->configHelper->getShowResetPassword()) {
+      $form['request_password'] = [
+        '#theme' => 'item_list',
+        '#items' => [
+          [
+            '#type' => 'link',
+            '#title' => $this->t('Reset your password'),
+            '#url' => Url::fromRoute('user.pass', [], [
+              'attributes' => [
+                'title' => $this->t('Send password reset instructions via email.'),
+                'class' => ['request-password-link'],
+              ],
+            ]),
+          ],
+        ],
+      ];
+    }
     return $form;
   }
 

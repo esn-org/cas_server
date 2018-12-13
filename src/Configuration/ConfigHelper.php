@@ -8,9 +8,8 @@
 namespace Drupal\cas_server\Configuration;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Entity\Query\QueryFactory;
-use Drupal\cas_server\Entity\CasServerService;
-use Drupal\Core\Entity\EntityManager;
 
 /**
  * Class ConfigHelper
@@ -23,35 +22,24 @@ Class ConfigHelper {
    * @var \Drupal\Core\Config\Config
    */
   protected $settings;
-
   /**
-   * Entity Query handler for service definitions.
+   * Entity type manager
    *
-   * @var \Drupal\Core\Entity\Query\QueryFactory
+   * @var \Drupal\Core\Entity\EntityTypeManager
    */
-  protected $entityQuery;
-
-  /**
-   * Service entity storage.
-   *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
-   */
-  protected $storage;
+  protected $entityTypeManager;
 
   /**
    * Constructor.
    *
    * @param ConfigFactoryInterface $config_factory
    *   The configuration factory.
-   * @param QueryFactory $entity_query
-   *   The entity query handler.
-   * @param EntityManager $entity_manager
+   * @param EntityTypeManager $entity_manager
    *   The entity manager.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, QueryFactory $entity_query, EntityManager $entity_manager) {
+  public function __construct(ConfigFactoryInterface $config_factory, EntityTypeManager $entity_manager) {
     $this->settings = $config_factory->get('cas_server.settings');
-    $this->entityQuery = $entity_query;
-    $this->storage = $entity_manager->getStorage('cas_server_service');
+    $this->entityTypeManager = $entity_manager;
   }
 
   /**
@@ -207,6 +195,17 @@ Class ConfigHelper {
   }
 
   /**
+   * Show reset password link on login form.
+   *
+   * @return bool
+   *   Whether or not to show the reset password link.
+   */
+  public function getShowResetPassword() {
+    $value = $this->settings->get('login.reset_password');
+    return (bool) $value;
+  }
+
+  /**
    * Match a service string to a service definition.
    *
    * @param string $service
@@ -216,9 +215,9 @@ Class ConfigHelper {
    *   A matching CasServerService object or FALSE if no match.
    */
   private function matchServiceAgainstConfig($service) {
-    $sids = $this->entityQuery->get('cas_server_service')
-      ->execute();
-    $service_definitions = $this->storage->loadMultiple($sids);
+    $entity_manager = $this->entityTypeManager->getStorage('cas_server_service');
+    $sids = $entity_manager->getQuery()->execute();
+    $service_definitions = $entity_manager->loadMultiple($sids);
     foreach ($service_definitions as $def) {
       if ($this->matchServiceString($def->getService(), $service)) {
         return $def;

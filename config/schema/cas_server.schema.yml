@@ -54,6 +54,9 @@ cas_server.settings:
         username_attribute:
           type: string
           label: 'Login attribute to use for authentication'
+        reset_password:
+          type: boolean
+          label: 'Show reset password link'
 
 cas_server.cas_server_service.*:
   type: config_entity
