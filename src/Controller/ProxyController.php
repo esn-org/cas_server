@@ -22,7 +22,7 @@ use Drupal\cas_server\Ticket\TicketFactory;
  * Class ProxyController.
  */
 class ProxyController implements ContainerInjectionInterface {
-  
+
   /**
    * Used to get the query string parameters from the request.
    *
@@ -59,6 +59,12 @@ class ProxyController implements ContainerInjectionInterface {
   protected $ticketFactory;
 
   /**
+   * The time service
+   *
+   * @var \Drupal\Component\Datetime\TimeInterface
+   */
+  protected $time;
+  /**
    * Constructor.
    *
    * @param RequestStack $request_stack
@@ -78,6 +84,7 @@ class ProxyController implements ContainerInjectionInterface {
     $this->logger = $debug_logger;
     $this->configHelper = $config_helper;
     $this->ticketFactory = $ticket_factory;
+    $this->time = \Drupal::time();
   }
 
   /**
@@ -122,7 +129,7 @@ class ProxyController implements ContainerInjectionInterface {
         return $this->generateInternalErrorRequestResponse($format, 'Ticket not found');
       }
 
-      if (REQUEST_TIME > $ticket->getExpirationTime()) {
+      if ($this->time->getRequestTime() > $ticket->getExpirationTime()) {
         $this->logger->log("Failed to validate ticket: $pgt. Ticket had expired.");
         return $this->generateTicketExpiredRequestResponse($format, $pgt);
       }

@@ -119,6 +119,12 @@ class TicketValidationController implements ContainerInjectionInterface {
   protected $entityTypeManager;
 
   /**
+   * The time service.
+   *
+   * @var \Drupal\Component\Datetime\TimeInterface
+   */
+  protected $time;
+  /**
    * Constructor.
    *
    * @param RequestStack $request_stack
@@ -143,13 +149,14 @@ class TicketValidationController implements ContainerInjectionInterface {
     $this->ticketFactory = $ticket_factory;
     $this->eventDispatcher = $event_dispatcher;
     $this->entityTypeManager = $entity_manager;
+    $this->time = \Drupal::time();
   }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static($container->get('request_stack'), $container->get('cas_server.storage'), $container->get('cas_server.logger'), $container->get('cas_server.config_helper'), $container->get('http_client'), $container->get('cas_server.ticket_factory'), $container->get('event_dispatcher'), $container->get('entity.manager'));
+    return new static($container->get('request_stack'), $container->get('cas_server.storage'), $container->get('cas_server.logger'), $container->get('cas_server.config_helper'), $container->get('http_client'), $container->get('cas_server.ticket_factory'), $container->get('event_dispatcher'), $container->get('entity_type.manager'));
   }
 
   /**
@@ -207,7 +214,7 @@ class TicketValidationController implements ContainerInjectionInterface {
       }
 
       // Check expiration time against request time.
-      if (REQUEST_TIME > $ticket->getExpirationTime()) {
+      if ($this->time->getRequestTime() > $ticket->getExpirationTime()) {
         $this->logger->log("Failed to validate ticket: $ticket_string. Ticket had expired.");
         return $this->generateTicketExpiredResponse($validation_type, $format, $ticket);
       }
