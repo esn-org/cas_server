@@ -22,6 +22,8 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Session\SessionManagerInterface;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
+use Drupal\cas_server\Exception\TicketMissingException;
+use Drupal\cas_server\Exception\TicketTypeException;
 
 /**
  * Class UserActionController.
@@ -190,7 +192,7 @@ class UserActionController implements ContainerInjectionInterface {
       $url = Url::fromUri($service, ['query' => ['ticket' => $st->getId()]]);
       return RedirectResponse::create($url->toString(), 302);
     }
-    
+
     // If gateway is set and user is not logged in, redirect them back to
     // service.
     if ($gateway && !$this->userHasSingleSignOnSession($service)) {
