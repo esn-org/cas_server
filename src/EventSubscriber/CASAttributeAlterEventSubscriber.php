@@ -37,7 +37,12 @@ class CASAttributeAlterEventSubscriber implements EventSubscriberInterface {
     if (!empty($attributes)) {
       foreach ($attributes as $attr) {
         foreach ($event->getUser()->get($attr)->getValue() as $value) {
-          $eventAttributes[$attr] = $value['value'];
+          if (isset($value['value'])) {
+             $eventAttributes[$attr] = $value['value'];
+          }
+          if (isset($value['target_id'])) {
+            $eventAttributes[$attr][] = $value['target_id'];
+          }
         }
       }
     }
