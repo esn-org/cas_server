@@ -8,7 +8,7 @@
 namespace Drupal\cas_server\Logger;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Logger\LoggerChannelFactory;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\RfcLogLevel;
 
 /**
@@ -26,7 +26,7 @@ class DebugLogger {
   /**
    * Stores logger.
    *
-   * @var \Drupal\Core\Logger\LoggerChannel
+   * @var \Drupal\Core\Logger\LoggerChannelInterface
    */
   protected $loggerChannel;
 
@@ -35,10 +35,10 @@ class DebugLogger {
    *
    * @param ConfigFactoryInterface $config_factory
    *   The configuration factory.
-   * @param LoggerChannelFactory $logger_factory
+   * @param LoggerChannelFactoryInterface $logger_factory
    *   The logger channel factory.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelFactory $logger_factory) {
+  public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelFactoryInterface $logger_factory) {
     $this->settings = $config_factory->get('cas_server.settings');
     $this->loggerChannel = $logger_factory->get('cas_server');
   }
