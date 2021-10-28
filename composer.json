@@ -1,5 +1,6 @@
 {
     "name": "esn-org/cas_server",
     "type": "drupal-module",
-    "require": {}
+    "require": {},
+    "license": "GPL-2.0+"
 }
