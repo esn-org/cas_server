@@ -64,6 +64,7 @@ class ProxyController implements ContainerInjectionInterface {
    * @var \Drupal\Component\Datetime\TimeInterface
    */
   protected $time;
+
   /**
    * Constructor.
    *

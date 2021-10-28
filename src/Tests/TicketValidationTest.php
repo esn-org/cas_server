@@ -2,14 +2,16 @@
 
 namespace Drupal\cas_server\Tests;
 
-use Drupal\simpletest\WebTestBase;
+use Drupal\Tests\BrowserTestBase;
 
 /**
  * Tests responses from the ticket validation system.
  *
  * @group cas_server
  */
-class TicketValidationTest extends WebTestBase {
+class TicketValidationTest extends BrowserTestBase {
+
+  protected $defaultTheme = 'classy';
 
   public static $modules = ['cas_server'];
 

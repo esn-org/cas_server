@@ -2,7 +2,7 @@
 
 namespace Drupal\cas_server\Tests;
 
-use Drupal\simpletest\WebTestBase;
+use Drupal\Tests\BrowserTestBase;
 use Drupal\cas_server\Entity\CasServerService;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Url;
@@ -12,7 +12,9 @@ use Drupal\Core\Url;
  *
  * @group cas_server
  */
-class UserActionControllerTest extends WebTestBase {
+class UserActionControllerTest extends BrowserTestBase {
+
+  protected $defaultTheme = 'classy';
 
   public static $modules = ['cas_server'];
 

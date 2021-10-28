@@ -33,6 +33,13 @@ use Drupal\cas_server\CasServerServiceInterface;
  *   links = {
  *     "edit-form" = "/admin/config/people/cas_server/{cas_server_service}",
  *     "delete-form" = "/admin/config/people/cas_server/{cas_server_service}/delete",
+ *   },
+ *   config_export = {
+ *     "id",
+ *     "label",
+ *     "service",
+ *     "sso",
+ *     "attributes",
  *   }
  * )
  */

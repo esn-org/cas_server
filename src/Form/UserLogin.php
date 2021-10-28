@@ -30,6 +30,13 @@ use Drupal\Core\Session\SessionManagerInterface;
 class UserLogin extends FormBase {
 
   /**
+   * The time service
+   *
+   * @var \Drupal\Component\Datetime\TimeInterface
+   */
+  protected $time;
+
+  /**
    * Constructs a \Drupal\cas_server\Form\UserLogin object.
    *
    * @param UserAuthInterface $user_auth
@@ -55,6 +62,7 @@ class UserLogin extends FormBase {
     $this->requestStack = $request_stack;
     $this->logger = $debug_logger;
     $this->entityManager = $entity_manager;
+    $this->time = \Drupal::time();
   }
 
   /**
@@ -174,7 +182,7 @@ class UserLogin extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     if ((empty($_SESSION['cas_lt'])) || $form_state->getValue('lt') != $_SESSION['cas_lt']) {
-      drupal_set_message($this->t('Login ticket invalid. Please try again.'), 'error');
+      $this->messenger()->addStatus($this->t('Login ticket invalid. Please try again.'), 'error');
       $form_state->setRedirectUrl(Url::fromRoute('cas_server.login'));
     }
     else {
@@ -185,7 +193,7 @@ class UserLogin extends FormBase {
         if (empty($service) || $this->configHelper->verifyServiceForSso($service)) {
           if ($this->configHelper->shouldUseTicketGrantingTicket()) {
             $tgt = $this->ticketFactory->createTicketGrantingTicket();
-            setcookie('cas_tgc', $tgt->getId(), REQUEST_TIME + $this->configHelper->getTicketGrantingTicketTimeout(), '/cas');
+            setcookie('cas_tgc', $tgt->getId(), $this->time->getRequestTime() + $this->configHelper->getTicketGrantingTicketTimeout(), '/cas');
           }
         }
         if (!empty($service)) {
@@ -198,7 +206,7 @@ class UserLogin extends FormBase {
         }
       }
       else {
-        drupal_set_message($this->t('Bad username/password combination given.'), 'error');
+        $this->messenger()->addStatus($this->t('Bad username/password combination given.'), 'error');
         $form_state->setRedirectUrl(Url::fromRoute('cas_server.login'));
       }
     }

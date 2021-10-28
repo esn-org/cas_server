@@ -7,14 +7,20 @@
 
 namespace Drupal\cas_server\Form;
 
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityForm;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityFieldManager;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 
 class ServicesForm extends EntityForm {
+
+  /**
+   * Entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
 
   /**
    * The entity field manager.
@@ -24,13 +30,13 @@ class ServicesForm extends EntityForm {
   protected $entityFieldManager;
 
   /**
-   * @param \Drupal\Core\Entity\Query\QueryFactory $entity_query
+   * @param \Drupal\Core\Entity\Query\QueryFactoryInterface $entity_query
    *   The entity query.
    * @param \Drupal\Core\Entity\EntityFieldManager $entity_field_manager
    *   The entity field manager.
    */
-  public function __construct(QueryFactory $entity_query, EntityFieldManager $entity_field_manager) {
-    $this->entityQuery = $entity_query;
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, EntityFieldManager $entity_field_manager) {
+    $this->entityTypeManager = $entity_type_manager;
     $this->entityFieldManager = $entity_field_manager;
   }
 
@@ -38,7 +44,10 @@ class ServicesForm extends EntityForm {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static($container->get('entity.query'), $container->get('entity_field.manager'));
+    return new static(
+      $container->get('entity_type.manager'),
+      $container->get('entity_field.manager')
+    );
   }
 
   /**
@@ -62,7 +71,7 @@ class ServicesForm extends EntityForm {
     $form['id'] = array(
       '#type' => 'machine_name',
       '#default_value' => $service->getId(),
-      '#machine_name' => array( 
+      '#machine_name' => array(
         'exists' => array($this, 'exist'),
       ),
       '#disabled' => !$service->isNew(),
@@ -107,12 +116,12 @@ class ServicesForm extends EntityForm {
     $status = $service->save();
 
     if ($status) {
-      drupal_set_message($this->t('Saved the %label Service.', array(
+      $this->messenger()->addStatus($this->t('Saved the %label Service.', array(
         '%label' => $service->getLabel(),
       )));
     }
     else {
-      drupal_set_message($this->t('The %label Service was not saved.', array(
+      $this->messenger()->addStatus($this->t('The %label Service was not saved.', array(
         '%label' => $service->getLabel(),
       )));
     }
@@ -121,7 +130,7 @@ class ServicesForm extends EntityForm {
   }
 
   public function exist($id) {
-    $entity = $this->entityQuery->get('cas_server_service')
+    $entity = $this->entityTypeManager->getStorage('cas_server_service')->getQuery()
       ->condition('id', $id)
       ->execute();
     return (bool) $entity;

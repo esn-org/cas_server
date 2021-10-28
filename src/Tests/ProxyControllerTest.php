@@ -2,15 +2,17 @@
 
 namespace Drupal\cas_server\Tests;
 
-use Drupal\simpletest\WebTestBase;
 use Drupal\cas_server\Entity\CasServerService;
+use Drupal\Tests\BrowserTestBase;
 
 /**
  * Tests responses from the proxy ticket granting system.
  *
  * @group cas_server
  */
-class ProxyControllerTest extends WebTestBase {
+class ProxyControllerTest extends BrowserTestBase {
+
+  protected $defaultTheme = 'classy';
 
   public static $modules = ['cas_server'];
 

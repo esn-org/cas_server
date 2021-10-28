@@ -89,6 +89,13 @@ class UserActionController implements ContainerInjectionInterface {
   protected $killSwitch;
 
   /**
+   * The time service
+   *
+   * @var \Drupal\Component\Datetime\TimeInterface
+   */
+  protected $time;
+
+  /**
    * Constructor.
    *
    * @param RequestStack $request_stack
@@ -120,6 +127,7 @@ class UserActionController implements ContainerInjectionInterface {
     $this->stringTranslation = $translation;
     $this->sessionManager = $session_manager;
     $this->killSwitch = $kill_switch;
+    $this->time = \Drupal::time();
   }
 
   /**
@@ -211,7 +219,7 @@ class UserActionController implements ContainerInjectionInterface {
     $this->killSwitch->trigger();
     if (isset($_COOKIE['cas_tgc'])) {
       unset($_COOKIE['cas_tgc']);
-      setcookie('cas_tgc', '', REQUEST_TIME - 3600, '/cas');
+      setcookie('cas_tgc', '', $this->time->getRequestTime() - 3600, '/cas');
     }
     $session_id = $this->sessionManager->getId();
     $hashed_id = Crypt::hashBase64($session_id);
@@ -247,7 +255,7 @@ class UserActionController implements ContainerInjectionInterface {
         return FALSE;
       }
 
-      if (REQUEST_TIME > $tgt->getExpirationTime()) {
+      if ($this->time->getRequestTime() > $tgt->getExpirationTime()) {
         $this->ticketStore->deleteTicketGrantingTicket($tgt);
         return FALSE;
       }

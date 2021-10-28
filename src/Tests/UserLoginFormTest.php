@@ -2,7 +2,7 @@
 
 namespace Drupal\cas_server\Tests;
 
-use Drupal\simpletest\WebTestBase;
+use Drupal\Tests\BrowserTestBase;
 use Drupal\cas_server\Entity\CasServerService;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Url;
@@ -12,7 +12,9 @@ use Drupal\Core\Url;
  *
  * @group cas_server
  */
-class UserLoginFormTest extends WebTestBase {
+class UserLoginFormTest extends BrowserTestBase {
+
+  protected $defaultTheme = 'classy';
 
   public static $modules = ['cas_server'];
 
@@ -25,7 +27,7 @@ class UserLoginFormTest extends WebTestBase {
     $this->ticketFactory = $this->container->get('cas_server.ticket_factory');
     $this->ticketStore = $this->container->get('cas_server.storage');
     $this->connection = $this->container->get('database');
-    $this->tempStoreFactory = $this->container->get('user.private_tempstore');
+    $this->tempStoreFactory = $this->container->get('tempstore.private');
     $this->entityStorage = $this->container->get('entity_type.manager')->getStorage('cas_server_service');
 
     $test = CasServerService::create([
